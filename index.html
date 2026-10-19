@@ -1,0 +1,345 @@
+<!doctype html>
+<!--
+  0次会 企画ガイド（事前申し込みの案内と、全企画のチラシ）
+  このフォルダ（0jikai-guide/public/）の中身は、公開用リポジトリ Ryo-M-alt/adspt-0jikai の一番上に自動でコピーされ、
+  https://ryo-m-alt.github.io/adspt-0jikai/ で公開されます。
+  チラシ画像（images/）の元のファイルと作り方は、0jikai-guide/README.md に書いてあります。
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff8ec">
+<!-- スマホがダークモードでも、チラシに合わせた明るい見た目のまま表示する -->
+<meta name="color-scheme" content="light">
+<!-- 参加者向けのページなので、検索結果には出さない -->
+<meta name="robots" content="noindex">
+<title>0次会 企画ガイド｜ADS卒業パーティー in TOKYO</title>
+<meta name="description" content="10月31日（土）の0次会で開く6つの企画のご案内です。シェア会・ダメ出し会で話したい方は、10月25日（日）正午までにお申し込みください。">
+<!-- SlackやLINEにURLを貼ったときに出る見出しと説明 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="0次会 企画ガイド｜ADS卒業パーティー in TOKYO">
+<meta property="og:description" content="10月31日（土）の0次会で開く6つの企画のご案内です。シェア会・ダメ出し会で話したい方は、10月25日（日）正午までにお申し込みください。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700;900&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff8ec;
+    --card: #ffffff;
+    --ink: #1f2a4d;
+    --muted: #5b6480;
+    --red: #e0393f;
+    --yellow: #ffd23f;
+    --yellow-soft: #fff1b8;
+    --line: #f1e3c9;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
+    line-height: 1.75;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1, h2, h3, .round { font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Zen Kaku Gothic New", sans-serif; font-weight: 900; line-height: 1.35; }
+  p, ul, dl, h1, h2, h3 { margin: 0; }
+  ul { padding: 0; list-style: none; }
+  a { color: inherit; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
+
+  /* ---- 一番上 ---- */
+  .hero {
+    position: relative; overflow: hidden; text-align: center; padding: 36px 0 32px;
+    background:
+      linear-gradient(to bottom, transparent 80%, var(--bg)),
+      radial-gradient(circle at 12% 18%, #ffe39a 0, transparent 34%),
+      radial-gradient(circle at 92% 8%, #ffd0dc 0, transparent 32%),
+      radial-gradient(circle at 85% 92%, #d3efd9 0, transparent 36%),
+      radial-gradient(circle at 5% 95%, #d8e8ff 0, transparent 30%),
+      var(--bg);
+  }
+  .spark { position: absolute; font-size: 22px; line-height: 1; pointer-events: none; user-select: none; }
+  .pill { display: inline-block; padding: 4px 18px; border-radius: 999px; background: var(--red); color: #fff; font-size: 15px; }
+  .hero h1 { margin-top: 14px; font-size: 44px; letter-spacing: .02em; }
+  .hero h1 .accent { color: var(--red); }
+  .hero h1 small { display: block; font-size: 22px; color: var(--ink); }
+  .tagline { margin-top: 12px; font-weight: 700; font-size: 16px; }
+  .marker { background: linear-gradient(transparent 58%, var(--yellow-soft) 58%); }
+  .countdown {
+    display: inline-block; margin-top: 18px; padding: 8px 20px; border-radius: 16px; transform: rotate(-2deg);
+    background: var(--yellow); box-shadow: 0 4px 0 #e2b400; font-size: 16px;
+  }
+  .countdown b { font-size: 24px; }
+  .facts { display: grid; gap: 6px; justify-content: center; margin-top: 20px; font-size: 15px; text-align: left; }
+  .facts div { display: flex; gap: 10px; align-items: baseline; }
+  .facts dt { flex: none; padding: 0 10px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; }
+  .facts dd { margin: 0; font-weight: 700; }
+  .lead { margin-top: 20px; font-size: 16px; }
+
+  section { margin-top: 36px; }
+  h2 { font-size: 24px; text-align: center; }
+  h2::before, h2::after { content: "✦"; color: var(--yellow); margin: 0 10px; font-size: 18px; vertical-align: 3px; }
+  .h2-sub { text-align: center; color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  /* ---- 事前申し込み ---- */
+  .apply { margin-top: 16px; border: 3px solid var(--red); border-radius: 22px; background: var(--card); overflow: hidden; }
+  .apply-head { background: var(--red); color: #fff; text-align: center; padding: 12px 16px; }
+  .apply-head .label { font-size: 14px; font-weight: 700; }
+  .apply-head .date { font-size: 26px; }
+  .apply-body { padding: 18px 16px 20px; }
+  .apply-row + .apply-row { margin-top: 18px; padding-top: 18px; border-top: 2px dashed var(--line); }
+  .apply-row .who { font-weight: 700; font-size: 16px; }
+  .apply-row .who small { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+  .apply-free { margin-top: 18px; padding: 12px 14px; border-radius: 14px; background: var(--yellow-soft); font-size: 14px; }
+  .rules { margin-top: 14px; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+  .rules li { position: relative; padding-left: 1.2em; }
+  .rules li::before { content: "✦"; position: absolute; left: 0; color: var(--red); font-size: 11px; top: .35em; }
+  .rules-title { margin-top: 18px; font-weight: 700; font-size: 14px; }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    min-height: 54px; margin-top: 12px; padding: 10px 16px; border-radius: 999px;
+    background: var(--c, var(--red)); color: #fff; box-shadow: 0 4px 0 rgba(31, 42, 77, .25);
+    font-family: "Zen Maru Gothic", sans-serif; font-weight: 900; font-size: 18px; text-decoration: none; text-align: center;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(31, 42, 77, .25); }
+  .btn:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+  .btn[aria-disabled="true"] { background: #d9dbe3; color: var(--muted); box-shadow: none; pointer-events: none; }
+  .form-note { margin-top: 10px; text-align: center; color: var(--muted); font-size: 12px; }
+
+  /* ---- 企画の目次 ---- */
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+  .chips a {
+    padding: 4px 14px; border-radius: 999px; border: 2px solid var(--c); background: var(--card); color: var(--c);
+    font-weight: 700; font-size: 14px; text-decoration: none;
+  }
+
+  /* ---- 企画ごとのカード ---- */
+  .prog { margin-top: 24px; border: 3px solid var(--c); border-radius: 22px; background: var(--card); overflow: hidden; scroll-margin-top: 12px; }
+  .prog-head { position: relative; padding: 16px 18px 14px; background: var(--c); color: #fff; }
+  .prog-head .time { display: inline-block; padding: 0 12px; border-radius: 999px; background: #fff; color: var(--c); font-weight: 700; font-size: 14px; }
+  .prog-head h3 { margin-top: 8px; font-size: 27px; }
+  .prog-head h3 small { font-size: 15px; font-weight: 700; margin-left: 4px; }
+  .prog-head .catch { margin-top: 2px; font-weight: 700; font-size: 15px; opacity: .95; }
+  .prog-body { padding: 16px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .tag { padding: 1px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; border: 2px solid var(--c); color: var(--c); }
+  .tag.need { background: var(--red); border-color: var(--red); color: #fff; }
+  .tag.free { border-color: #9aa1b5; color: var(--muted); }
+  .flyer { display: block; margin-top: 14px; border-radius: 14px; overflow: hidden; box-shadow: 0 6px 18px rgba(31, 42, 77, .14); }
+  .flyer img { display: block; width: 100%; height: auto; }
+  .flyer-note { margin-top: 8px; text-align: center; color: var(--muted); font-size: 12px; }
+  .booth-art {
+    margin-top: 14px; padding: 26px 16px; border-radius: 14px; text-align: center;
+    background: radial-gradient(circle at 20% 30%, #c9f0ea 0, transparent 45%), radial-gradient(circle at 85% 75%, #fff1b8 0, transparent 45%), #f2fbf9;
+  }
+  .booth-art .big { font-size: 26px; color: var(--c); }
+  .booth-art p + p { margin-top: 6px; font-size: 14px; color: var(--muted); }
+
+  footer { margin-top: 40px; padding: 24px 16px 40px; text-align: center; color: var(--muted); font-size: 13px; border-top: 2px dashed var(--line); }
+  footer .round { color: var(--ink); font-size: 16px; margin-bottom: 4px; }
+
+  @media (min-width: 600px) {
+    .hero { padding-top: 56px; }
+    .hero h1 { font-size: 52px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <span class="spark" style="top:22px;left:7%;color:#ffb800" aria-hidden="true">✦</span>
+  <span class="spark" style="top:70px;right:8%;color:#ff6f91;font-size:16px" aria-hidden="true">✦</span>
+  <span class="spark" style="top:190px;left:4%;color:#3aa66b;font-size:14px" aria-hidden="true">✦</span>
+  <span class="spark" style="top:150px;right:5%;color:#ffb800;font-size:18px" aria-hidden="true">✦</span>
+  <div class="wrap">
+    <p class="pill round">ADS卒業パーティー in TOKYO</p>
+    <h1><span class="accent">0次会</span><small>企画ガイド</small></h1>
+    <p class="tagline"><span class="marker">新しいつながりが、これからをつくる。</span></p>
+    <p class="countdown round" id="countdown" hidden></p>
+    <dl class="facts">
+      <div><dt>日時</dt><dd>10月31日（土）16:00–18:00（開場15:30）</dd></div>
+      <div><dt>会場</dt><dd>Artia Ginza</dd></div>
+    </dl>
+    <p class="lead">6つの企画を同時に開きます。<br>気になる企画に、好きな時間に参加できます。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section aria-labelledby="apply-title">
+    <h2 id="apply-title">事前申し込み</h2>
+    <p class="h2-sub">ほとんどの企画は申し込みなしで参加できます</p>
+
+    <div class="apply">
+      <div class="apply-head">
+        <p class="label js-deadline-label">話したい方だけ、申し込みの締切は</p>
+        <p class="date round">10月25日（日）正午</p>
+      </div>
+      <div class="apply-body">
+        <div class="apply-row">
+          <p class="who">シェア会で、話したい人<small>多いときは抽選になります</small></p>
+          <a class="btn js-apply" style="--c:#e0393f" href="https://forms.gle/5w5Sqrv5dVsdWcHYA" target="_blank" rel="noopener">シェア会に申し込む</a>
+        </div>
+        <div class="apply-row">
+          <p class="who">ダメ出し会で、作品を見せたい人<small>先着6名です</small></p>
+          <a class="btn js-apply" style="--c:#26356b" href="https://forms.gle/BkUAZnvX6hZV7QQx9" target="_blank" rel="noopener">ダメ出し会に申し込む</a>
+        </div>
+        <p class="form-note js-form-note">ボタンを押すと、Googleフォームが開きます。0次会に申し込んだ方が対象です。</p>
+
+        <p class="apply-free">聞くだけ・ダメ出しするだけなら、申し込みはいりません。当日そのままお越しください。</p>
+
+        <p class="rules-title">話す人へのお願い（2つの企画に共通）</p>
+        <ul class="rules">
+          <li>スライドはいりません。自分の端末で画面を見せればOKです。</li>
+          <li>1人5分が目安です。</li>
+          <li>会場のWi-Fiは使えません。オフラインで見られるようにしておくか、テザリングをご用意ください。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="progs-title">
+    <h2 id="progs-title">6つの企画</h2>
+    <p class="h2-sub">チラシをタップすると、大きく見られます</p>
+    <nav class="chips" aria-label="企画の一覧">
+      <a href="#booth" style="--c:#13897b">交流ブース</a>
+      <a href="#lt" style="--c:#23874a">LT会</a>
+      <a href="#dasai-ui" style="--c:#3f7f17">ダサいUI</a>
+      <a href="#share" style="--c:#e0393f">シェア会</a>
+      <a href="#dameshi" style="--c:#26356b">ダメ出し会</a>
+      <a href="#makoai" style="--c:#d63470">マコ愛を語る会</a>
+    </nav>
+
+    <article class="prog" id="booth" style="--c:#13897b">
+      <div class="prog-head">
+        <p class="time">15:30–18:00</p>
+        <h3>初心者向け交流ブース</h3>
+        <p class="catch">迷ったら、まずここへ</p>
+      </div>
+      <div class="prog-body">
+        <ul class="tags"><li class="tag free">申し込み不要</li><li class="tag">受付の横</li></ul>
+        <p>どの企画に行くか迷ったときや、一人で来て話し相手を探したいときに、気軽に立ち寄れるブースです。卒ぱQUESTの使い方も、ここでご案内します。</p>
+        <div class="booth-art">
+          <p class="big round">ひとりでも、大丈夫。</p>
+          <p>幹事がお待ちしています</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="prog" id="lt" style="--c:#23874a">
+      <div class="prog-head">
+        <p class="time">16:15–18:00</p>
+        <h3>LT会</h3>
+        <p class="catch">みんなの「やってみた！」を聞こう</p>
+      </div>
+      <div class="prog-body">
+        <ul class="tags"><li class="tag free">申し込み不要</li><li class="tag">7名が登壇</li></ul>
+        <p>ADSの仲間7名が、成果や気づきを5分ずつ発表します。発表のあとは、質疑応答の時間もあります。登壇者とタイトルは、チラシをご覧ください。</p>
+        <a class="flyer" href="images/lt.jpg" target="_blank" rel="noopener">
+          <img src="images/lt.jpg" width="1100" height="1375" loading="lazy" decoding="async" alt="LT会のチラシ。16:15から17:55まで、7名の登壇者の時間と発表タイトルが載っています。">
+        </a>
+      </div>
+    </article>
+
+    <article class="prog" id="dasai-ui" style="--c:#3f7f17">
+      <div class="prog-head">
+        <p class="time">16:30–17:30</p>
+        <h3>ダサいUIを作ろうワークショップ</h3>
+        <p class="catch">ダサいUIを作ると、良いUIが見えてくる</p>
+      </div>
+      <div class="prog-body">
+        <ul class="tags"><li class="tag free">事前登録した5名のみ</li><li class="tag">講師 RYO</li></ul>
+        <p>AIであえてダサいUIを作り、どこがダサいのかを言葉にしながら、良いUIのコツをつかむ60分のワークショップです。参加は、Peatixで事前登録した方のみです。</p>
+        <a class="flyer" href="images/dasai-ui.jpg" target="_blank" rel="noopener">
+          <img src="images/dasai-ui.jpg" width="1055" height="1491" loading="lazy" decoding="async" alt="ダサいUIを作ろうワークショップのチラシ。学びの流れと、60分の当日の流れが載っています。">
+        </a>
+      </div>
+    </article>
+
+    <article class="prog" id="share" style="--c:#e0393f">
+      <div class="prog-head">
+        <p class="time">16:15–18:00</p>
+        <h3>AIやってみたシェア会</h3>
+        <p class="catch">シェアして、学んで、ひらめこう！</p>
+      </div>
+      <div class="prog-body">
+        <ul class="tags"><li class="tag need">話す人は申し込み</li><li class="tag free">聞くだけなら不要</li></ul>
+        <p>AIで作った作品や失敗談、これからやりたいことを、近くの人と気軽にシェアする交流会です。3つのテーブルで、好きな時間に出入りできます。</p>
+        <a class="flyer" href="images/share.jpg" target="_blank" rel="noopener">
+          <img src="images/share.jpg" width="1032" height="1524" loading="lazy" decoding="async" alt="シェア会のチラシ。16:15から18:00まで、好きな時間に参加できる、3つのテーブルでの交流会です。">
+        </a>
+        <a class="btn js-apply" href="https://forms.gle/5w5Sqrv5dVsdWcHYA" target="_blank" rel="noopener">シェア会に申し込む</a>
+      </div>
+    </article>
+
+    <article class="prog" id="dameshi" style="--c:#26356b">
+      <div class="prog-head">
+        <p class="time">16:15–17:55（3回）</p>
+        <h3>ダメ出し会</h3>
+        <p class="catch">ドSとドM、集まれ</p>
+      </div>
+      <div class="prog-body">
+        <ul class="tags"><li class="tag need">見せる人は申し込み</li><li class="tag free">ダメ出しだけなら不要</li></ul>
+        <p>AIで作ったアプリや仕組みを持ち寄って、「ここ、正直どう？」を言い合う会です。作品を見せる人は先着6名です。</p>
+        <a class="flyer" href="images/dameshi.jpg" target="_blank" rel="noopener">
+          <img src="images/dameshi.jpg" width="1100" height="1971" loading="lazy" decoding="async" alt="ダメ出し会のチラシ。1回目16:15から、2回目17:00から、3回目17:30からの3回で、流れと持ちものが載っています。">
+        </a>
+        <a class="btn js-apply" href="https://forms.gle/BkUAZnvX6hZV7QQx9" target="_blank" rel="noopener">ダメ出し会に申し込む</a>
+      </div>
+    </article>
+
+    <article class="prog" id="makoai" style="--c:#d63470">
+      <div class="prog-head">
+        <p class="time">16:15–18:00</p>
+        <h3>マコ愛を語る会<small>（マコなりテーブル）</small></h3>
+        <p class="catch">予約なし！出入り自由！</p>
+      </div>
+      <div class="prog-body">
+        <ul class="tags"><li class="tag free">申し込み不要</li></ul>
+        <p>マコなり社長の「ここが好き！」を、人気の動画からシェアする会です。好きな動画を、5分で語りましょう。</p>
+        <a class="flyer" href="images/makoai.jpg" target="_blank" rel="noopener">
+          <img src="images/makoai.jpg" width="1024" height="1536" loading="lazy" decoding="async" alt="マコ愛を語る会のチラシ。16:15から18:00まで、予約なし・出入り自由で、好きな動画を5分で語る会です。">
+        </a>
+      </div>
+    </article>
+  </section>
+</main>
+
+<footer>
+  <p class="round">当日お会いできるのを、楽しみにしています！</p>
+  <p>ADS卒業パーティー in TOKYO 幹事一同</p>
+</footer>
+
+<script>
+  (() => {
+    // 0次会までの日数を出す（日本時間の日付で数える）
+    const countdown = document.getElementById("countdown");
+    const ymdInJapan = (t) => new Date(t + 9 * 3600e3).toISOString().slice(0, 10);
+    const days = Math.round((Date.parse("2026-10-31") - Date.parse(ymdInJapan(Date.now()))) / 86400e3);
+    if (days > 0) {
+      countdown.innerHTML = "0次会まで <b>あと" + days + "日</b>";
+      countdown.hidden = false;
+    } else if (days === 0) {
+      countdown.innerHTML = "<b>いよいよ今日！</b> 16:00スタート";
+      countdown.hidden = false;
+    }
+
+    // 締切を過ぎたら、申し込みボタンを押せない表示に切り替える（ページを直し忘れても、古い案内のままにならないように）
+    const DEADLINE = new Date("2026-10-25T12:00:00+09:00");
+    if (Date.now() < DEADLINE.getTime()) return;
+    for (const a of document.querySelectorAll(".js-apply")) {
+      a.removeAttribute("href");
+      a.setAttribute("aria-disabled", "true");
+      a.textContent = "受付を締め切りました";
+    }
+    document.querySelector(".js-deadline-label").textContent = "申し込みは締め切りました";
+    document.querySelector(".js-form-note").hidden = true;
+  })();
+</script>
+</body>
+</html>

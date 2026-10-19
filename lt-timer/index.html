@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1730">
+<title>LT会タイマー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<style>
+  :root {
+    --navy: #0a1730;
+    --gold: #d9b45a;
+    --gold-line: rgba(217, 180, 90, 0.35);
+    --text: #f3f1ea;
+    --text-sub: #b9c3d6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    /* 色は段階ごとに切り替える（ふだんは紺、残り1分で黄、残り30秒で赤） */
+    --bg: var(--navy);
+    --fg: var(--text);
+    --sub: var(--text-sub);
+    --accent: var(--gold);
+    --line: var(--gold-line);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    font-weight: 500;
+    overflow: hidden;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+
+  /* 縦持ちのスマホを基準にした1列の画面。PCやタブレットでは、同じ並びのまま中央に拡大して出す */
+  .frame {
+    container-type: inline-size;
+    width: min(100vw, 62vh);
+    width: min(100vw, 62dvh);
+    height: 100vh;
+    height: 100dvh;
+    margin: 0 auto;
+  }
+  .screen {
+    /* 文字の大きさは画面の幅に対する割合（cqw）で決める。節目の段階で、この値を切り替える */
+    --remain: 24cqw;
+    --phase: 5.5cqw;
+    --name: 9cqw;
+    --title: 5.5cqw;
+    --clock: 8cqw;
+    --next-label: 3.8cqw;
+    --next-name: 5.5cqw;
+    --next-title: 4.2cqw;
+
+    height: 100%;
+    padding: max(5cqw, env(safe-area-inset-top)) 5cqw max(5cqw, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .screen > * { width: 100%; }
+
+  .remain { font-size: var(--remain); font-weight: 700; line-height: 1; letter-spacing: 0.02em; white-space: nowrap; }
+  .phase {
+    width: auto;
+    font-size: var(--phase);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 0.2em 1em;
+    line-height: 1.4;
+  }
+  .name { font-size: var(--name); font-weight: 700; line-height: 1.3; white-space: nowrap; }
+  .title { font-size: var(--title); line-height: 1.4; color: var(--sub); margin-top: 0.4em; }
+  .clock { font-size: var(--clock); line-height: 1.2; }
+  .next { border-top: 1px solid var(--line); padding-top: 3cqw; }
+  .next-label { font-size: var(--next-label); color: var(--accent); line-height: 1.4; }
+  .next-name { font-size: var(--next-name); font-weight: 700; line-height: 1.4; white-space: nowrap; }
+  .next-title { font-size: var(--next-title); line-height: 1.4; color: var(--sub); }
+  .title:empty, .next-title:empty { display: none; }
+
+  /* ===== 節目の段階（data-level：normal／warn＝残り1分／alert＝残り30秒） ===== */
+  body[data-level="warn"] {
+    --bg: #f2b33d;
+    --fg: #2b1d00;
+    --sub: #4d3700;
+    --accent: #2b1d00;
+    --line: rgba(43, 29, 0, 0.3);
+  }
+  body[data-level="alert"] {
+    --bg: #b3261e;
+    --fg: #fff7f5;
+    --sub: #ffd9d4;
+    --accent: #fff7f5;
+    --line: rgba(255, 247, 245, 0.35);
+  }
+  /* 並び順と出す情報は変えず、大きさの割合だけを変える */
+  body[data-level="warn"] .screen {
+    --remain: 34cqw; --phase: 4.5cqw; --name: 6.5cqw; --title: 4cqw; --clock: 5.5cqw;
+    --next-label: 3.2cqw; --next-name: 4.2cqw; --next-title: 3.4cqw;
+  }
+  body[data-level="alert"] .screen {
+    --remain: 40cqw; --phase: 3.8cqw; --name: 4.8cqw; --title: 3.2cqw; --clock: 4cqw;
+    --next-label: 3cqw; --next-name: 3.6cqw; --next-title: 3cqw;
+  }
+  /* 次の人への交代が近いとき（data-focus="next"）は、次の発表も大きくする */
+  body[data-level="warn"][data-focus="next"] .screen {
+    --remain: 30cqw; --phase: 4.2cqw; --name: 5cqw; --title: 3.4cqw; --clock: 4.5cqw;
+    --next-label: 4cqw; --next-name: 8cqw; --next-title: 5cqw;
+  }
+  body[data-level="alert"][data-focus="next"] .screen {
+    --remain: 34cqw; --phase: 3.6cqw; --name: 4cqw; --title: 3cqw; --clock: 3.6cqw;
+    --next-label: 4.5cqw; --next-name: 10cqw; --next-title: 6cqw;
+  }
+  /* 交代した直後の10秒（data-focus="current"）は、替わった人を大きいまま残す */
+  body[data-level="alert"][data-focus="current"] .screen {
+    --remain: 34cqw; --phase: 3.6cqw; --name: 10cqw; --title: 6cqw; --clock: 3.6cqw;
+    --next-label: 3cqw; --next-name: 3.6cqw; --next-title: 3cqw;
+  }
+
+  [hidden] { display: none !important; }
+
+  /* ===== 上の帯（練習モード・ずらし中の印と、歯車ボタン）。残り時間の数字に重ならないよう、1行分を取っておく ===== */
+  .status { flex: none; height: 36px; display: flex; align-items: center; gap: 6px; }
+  .badge { font-size: 13px; line-height: 1; padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
+  .badge-practice { color: var(--accent); border: 1px solid var(--accent); }
+  .badge-shift { color: var(--bg); background: var(--accent); font-weight: 700; }
+  .badge-wake { font: inherit; font-size: 13px; color: var(--fg); background: none; border: 1px dashed var(--accent); cursor: pointer; }
+  .gear {
+    margin-left: auto;
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    color: var(--accent);
+    background: none;
+    border: none;
+    opacity: 0.6;
+    cursor: pointer;
+  }
+  .gear svg { width: 24px; height: 24px; }
+
+  /* ===== ずらす操作の画面（歯車を押したときだけ、下から出す）。色は段階に関係なく紺で固定 ===== */
+  .panel {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: min(100vw, 480px);
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+    background: #12244a;
+    color: var(--text);
+    border-top: 2px solid var(--gold);
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; }
+  .panel-head h2 { font-size: 18px; color: var(--gold); }
+  .panel-shift { font-size: 15px; }
+  .panel-shift strong { font-size: 28px; margin-left: 8px; font-variant-numeric: tabular-nums; }
+  .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn {
+    min-height: 56px;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .btn:active { background: rgba(217, 180, 90, 0.25); }
+  .btn-reset { font-size: 17px; color: var(--gold); }
+  .btn-text { font: inherit; font-size: 15px; color: var(--text); background: none; border: 1px solid var(--text-sub); border-radius: 999px; padding: 4px 14px; cursor: pointer; }
+  .panel-plan { color: var(--text-sub); font-size: 14px; white-space: pre-line; }
+  .panel-msg { color: #ffb4a8; font-size: 14px; min-height: 1.5em; }
+  .panel-wake { font-size: 14px; color: var(--text-sub); border-top: 1px solid var(--gold-line); padding-top: 12px; white-space: pre-line; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <main class="screen" id="screen">
+    <div class="status">
+      <span class="badge badge-practice" id="practice-badge" hidden></span>
+      <span class="badge badge-shift" id="shift-badge" hidden></span>
+      <button class="badge badge-wake" id="wake-badge" type="button" hidden>画面が消えます</button>
+      <button class="gear" id="gear" type="button" aria-label="時間をずらす" aria-expanded="false" aria-controls="panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"/><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"/></svg>
+      </button>
+    </div>
+    <div class="remain" id="remain">--:--</div>
+    <div class="phase" id="phase"></div>
+    <div class="who">
+      <div class="name" id="name"></div>
+      <div class="title" id="title"></div>
+    </div>
+    <div class="clock" id="clock"></div>
+    <div class="next">
+      <div class="next-label">次の発表</div>
+      <div class="next-name" id="next-name"></div>
+      <div class="next-title" id="next-title"></div>
+    </div>
+  </main>
+</div>
+
+<section class="panel" id="panel" aria-label="時間をずらす" hidden>
+  <div class="panel-head">
+    <h2>時間をずらす</h2>
+    <button class="btn-text" id="panel-close" type="button">閉じる</button>
+  </div>
+  <p id="panel-target"></p>
+  <p class="panel-shift">いまのずれ<strong id="panel-shift">0分</strong></p>
+  <div class="panel-row">
+    <button class="btn" id="shift-minus" type="button">−1分</button>
+    <button class="btn" id="shift-plus" type="button">＋1分</button>
+  </div>
+  <button class="btn btn-reset" id="shift-reset" type="button">ずれを0に戻す</button>
+  <p class="panel-plan" id="panel-plan"></p>
+  <p class="panel-msg" id="panel-msg" role="status"></p>
+  <p class="panel-wake" id="panel-wake"></p>
+  <p class="panel-wake" id="panel-offline"></p>
+</section>
+
+<script>
+  // ===== 時間割（「LT会登壇者リスト」スプレッドシートから書き写したもの。変更はここを直す） =====
+  const MC_START = '16:05';   // MCの時間の開始
+  const LT_START = '16:15';   // 1人目の発表の開始
+  const SLOT_MIN = 15;        // 1人の持ち時間（発表＋質疑＋つなぎ）
+  const TALK_MIN = 5;         // 発表
+  const QA_MIN = 5;           // 質疑（残りの5分がつなぎ）
+
+  const MC = { name: 'MC さくさん', title: '' };
+  const SPEAKERS = [
+    { name: '荷川取 佑太', title: '開発経験ゼロのテニスコーチが、ADS期間に100個以上のアプリ＆Webページを作って気づいたこと' },
+    { name: '段木 裕太', title: 'Gitメルカリ～作ったツール、眠らせない～' },
+    { name: 'Aya（吉川亜矢子）', title: '自分専用会計システム' },
+    { name: '小安正史（まーくん）', title: '経験をAIで、再び現役の武器に変える' },
+    { name: '熊谷祐希', title: '「ヨルケア」～メンタル不調から復職後のセルフケアサポートアプリ～' },
+    { name: 'しんや', title: '' },  // スプレッドシートでは「未定」。タイトルが決まるまでは空欄で出す
+    { name: 'RYO', title: '苦手に挑み続けた男が見つけた、自分だけの戦い方' },
+  ];
+
+  // ===== 時刻 =====
+  // 練習モード：URLの末尾に ?t=16:19 や ?t=16:19:50 と書くと、その時刻から時計が進む
+  const practiceParam = new URLSearchParams(location.search).get('t');
+  const practiceOffset = (() => {
+    const m = practiceParam && practiceParam.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (!m) return 0;
+    const target = new Date();
+    target.setHours(+m[1], +m[2], +(m[3] || 0), 0);
+    return target.getTime() - Date.now();
+  })();
+  const isPractice = practiceOffset !== 0;
+  const now = () => Date.now() + practiceOffset;
+
+  const toMin = (hhmm) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  // その日の主な時刻（ずらす前の予定）。日付は見ず、時刻だけで動く
+  function baseTimes(nowMs) {
+    const d = new Date(nowMs);
+    const midnight = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const at = (min) => midnight + min * 60000;
+    const ltStart = at(toMin(LT_START));
+    return {
+      mcStart: at(toMin(MC_START)),
+      starts: SPEAKERS.map((_, i) => ltStart + i * SLOT_MIN * 60000),
+      ltEnd: ltStart + SPEAKERS.length * SLOT_MIN * 60000,
+    };
+  }
+
+  // ===== ずらす =====
+  // ずらすのは「今の人」だけ。今の人は、予定の持ち時間（15分）の中にいる人。1人目の開始前は1人目
+  const SHIFT_MIN = -5;   // 早められるのは5分まで
+  const SHIFT_MAX = 5;    // 遅らせられるのは5分まで（つなぎが0分になるところまで）
+  const SHIFT_KEY = 'lt-timer-shift';
+
+  function targetIndex(nowMs) {
+    const { starts, ltEnd } = baseTimes(nowMs);
+    if (nowMs >= ltEnd) return -1;
+    if (nowMs < starts[0]) return 0;
+    return Math.floor((nowMs - starts[0]) / (SLOT_MIN * 60000));
+  }
+
+  const dayKey = (ms) => {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  };
+
+  // ずらした量は、読み込み直しても残るように端末に保存する。日付・練習モードか・今の人が違えば使わない
+  let savedShift = null;
+  try { savedShift = JSON.parse(localStorage.getItem(SHIFT_KEY)); } catch (e) { savedShift = null; }
+
+  function saveShift(value) {
+    savedShift = value;
+    try {
+      if (value) localStorage.setItem(SHIFT_KEY, JSON.stringify(value));
+      else localStorage.removeItem(SHIFT_KEY);
+    } catch (e) { /* 保存できない端末では、開いている間だけずらす */ }
+  }
+
+  function activeShift(nowMs) {
+    const target = targetIndex(nowMs);
+    const s = savedShift;
+    const valid = s && s.day === dayKey(nowMs) && s.practice === isPractice && s.target === target;
+    return { target, min: valid ? s.min : 0 };
+  }
+
+  // その日の時間割を、段階ごとの区間（開始・終了の時刻）の並びにする。今の人のずれもここで入れる
+  function buildSegments(nowMs) {
+    const { mcStart, starts, ltEnd } = baseTimes(nowMs);
+    const { target, min } = activeShift(nowMs);
+    // 今の人の発表と質疑だけを動かす。つなぎの終わり（次の人の開始）は動かさない
+    const actual = starts.map((s, i) => (i === target ? s + min * 60000 : s));
+    const endNotice = { name: `LT会 終了（${fmtHM(ltEnd)}）`, title: '' };
+
+    const segs = [
+      { kind: 'before', label: '開始前', start: -Infinity, end: mcStart,
+        who: { name: 'LT会', title: `${MC_START} MCの時間／${LT_START} 1人目の発表` }, next: SPEAKERS[0] },
+      { kind: 'mc', label: 'MCの時間', start: mcStart, end: actual[0], who: MC, next: SPEAKERS[0], boundary: true, handover: true },
+    ];
+    SPEAKERS.forEach((sp, i) => {
+      const next = SPEAKERS[i + 1] || endNotice;
+      const talkEnd = actual[i] + TALK_MIN * 60000;
+      const qaEnd = talkEnd + QA_MIN * 60000;
+      const slotEnd = i + 1 < SPEAKERS.length ? actual[i + 1] : ltEnd;
+      const noBridge = qaEnd >= slotEnd;  // ＋5分ずらすと、つなぎがなくなり、質疑の終わりが交代になる
+      segs.push(
+        { kind: 'talk', label: '発表中', start: actual[i], end: talkEnd, who: sp, next, boundary: true },
+        { kind: 'qa', label: '質疑応答', start: talkEnd, end: qaEnd, who: sp, next, boundary: true, handover: noBridge },
+        { kind: 'bridge', label: 'つなぎ', start: qaEnd, end: slotEnd, who: sp, next, boundary: true, handover: true },
+      );
+    });
+    segs.push({ kind: 'after', label: '終了', start: ltEnd, end: Infinity,
+      who: { name: 'LT会は終了しました', title: 'おつかれさまでした' }, next: { name: '—', title: '' } });
+    return segs.filter((s) => s.end > s.start);
+  }
+
+  // 今の区間と、その1つ前の区間（交代した直後かどうかを見るため）
+  function currentSegment(nowMs) {
+    const segs = buildSegments(nowMs);
+    const i = segs.findIndex((s) => nowMs >= s.start && nowMs < s.end);
+    return { seg: segs[i], prev: segs[i - 1], segs };
+  }
+
+  // ===== 節目 =====
+  const WARN_SEC = 60;    // 残り1分で黄
+  const ALERT_SEC = 30;   // 残り30秒で赤
+  const HOLD_SEC = 10;    // 0になった後も、大きいまま残す秒数
+
+  // 区間の boundary：終わりが節目になる。handover：終わりが次の人への交代になる
+  // level：normal／warn／alert。focus：大きくするもの（remain＝残り時間だけ、next＝次の発表も、current＝替わった人も）
+  function stageOf(seg, prev, t) {
+    if (prev && prev.boundary && t - seg.start < HOLD_SEC * 1000) {
+      return { level: 'alert', focus: prev.handover ? 'current' : 'remain' };
+    }
+    if (!seg.boundary) return { level: 'normal', focus: 'remain' };
+    const left = Math.ceil((seg.end - t) / 1000);
+    const level = left <= ALERT_SEC ? 'alert' : left <= WARN_SEC ? 'warn' : 'normal';
+    const focus = level !== 'normal' && seg.handover ? 'next' : 'remain';
+    return { level, focus };
+  }
+
+  // ===== 表示 =====
+  const pad2 = (n) => String(n).padStart(2, '0');
+  function fmtHM(ms) {
+    const d = new Date(ms);
+    return `${d.getHours()}:${pad2(d.getMinutes())}`;
+  }
+  function fmtClock(ms) {
+    const d = new Date(ms);
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  }
+  // 残り時間は切り上げで数える（区切りの瞬間に「5:00」から始まり、「0:01」の次で段階が変わる）
+  function fmtRemain(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${m}:${pad2(s)}`;
+  }
+
+  // 文字が決めた行数に収まらないときは、収まるまで少しずつ小さくする（長いタイトルを省略せずに出すため）
+  function fitLines(el, cssVar, maxLines) {
+    el.style.fontSize = '';
+    if (!el.textContent) return;
+    for (let scale = 1; scale >= 0.5; scale -= 0.05) {
+      el.style.fontSize = `calc(var(${cssVar}) * ${scale.toFixed(2)})`;
+      const lineHeight = parseFloat(getComputedStyle(el).lineHeight);
+      const fits = maxLines === 1 ? el.scrollWidth <= el.clientWidth + 1 : el.scrollHeight <= lineHeight * maxLines + 1;
+      if (fits) return;
+    }
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  let lastLayoutKey = '';
+  let lastRemainLength = 0;
+
+  function setText(id, text) {
+    const el = $(id);
+    if (el.textContent !== text) el.textContent = text;
+  }
+
+  function fitAll() {
+    fitLines($('remain'), '--remain', 1);
+    fitLines($('name'), '--name', 1);
+    fitLines($('title'), '--title', 2);
+    fitLines($('next-name'), '--next-name', 1);
+    fitLines($('next-title'), '--next-title', 2);
+  }
+
+  const fmtShift = (min) => (min === 0 ? '0分' : `${min > 0 ? '＋' : '−'}${Math.abs(min)}分`);
+
+  // ずらす操作の画面の中身（今の人と、ずらした後の予定）
+  function renderPanel(segs, shift) {
+    if ($('panel').hidden) return;
+    setText('panel-shift', fmtShift(shift.min));
+    if (shift.target < 0) {
+      setText('panel-target', 'LT会は終了しました');
+      setText('panel-plan', '');
+      return;
+    }
+    const sp = SPEAKERS[shift.target];
+    setText('panel-target', `ずらす人：${sp.name}（${shift.target + 1}人目）`);
+    const mine = (kind) => segs.find((s) => s.who === sp && s.kind === kind);
+    const talk = mine('talk');
+    const qa = mine('qa');
+    const bridge = mine('bridge');
+    const nextStart = bridge ? bridge.end : qa.end;
+    const bridgeMin = bridge ? Math.round((bridge.end - bridge.start) / 60000) : 0;
+    const isLast = shift.target === SPEAKERS.length - 1;
+    setText('panel-plan',
+      `発表 ${fmtHM(talk.start)}〜${fmtHM(talk.end)}／質疑 〜${fmtHM(qa.end)}／つなぎ ${bridgeMin}分\n` +
+      (isLast ? `LT会は予定どおり ${fmtHM(nextStart)} に終わります` : `次の人は予定どおり ${fmtHM(nextStart)} に始まります`));
+  }
+
+  function render() {
+    const t = now();
+    const { seg, prev, segs } = currentSegment(t);
+    const { level, focus } = stageOf(seg, prev, t);
+    const shift = activeShift(t);
+    // 次の人に替わるなどして、保存していたずれが使えなくなったら消す（ずれは自動で0に戻る）
+    if (savedShift && shift.min === 0) saveShift(null);
+    $('shift-badge').hidden = shift.min === 0;
+    if (shift.min !== 0) setText('shift-badge', `${fmtShift(shift.min)}ずらし中`);
+    renderPanel(segs, shift);
+
+    const body = document.body;
+    body.dataset.kind = seg.kind;
+    body.dataset.level = level;
+    body.dataset.focus = focus;
+
+    const remainText = seg.kind === 'after' ? '0:00' : fmtRemain(seg.end - t);
+    setText('remain', remainText);
+    setText('phase', seg.label);
+    setText('clock', fmtClock(t));
+
+    // 名前・タイトルと文字の大きさは、登壇者か段階が替わったときだけ合わせ直す
+    const layoutKey = [seg.who.name, seg.who.title, seg.next.name, seg.next.title, level, focus].join('|');
+    if (layoutKey !== lastLayoutKey) {
+      lastLayoutKey = layoutKey;
+      setText('name', seg.who.name);
+      setText('title', seg.who.title);
+      setText('next-name', seg.next.name);
+      setText('next-title', seg.next.title);
+      // スマホのブラウザの上の帯の色も、画面の色にそろえる
+      themeMeta.content = getComputedStyle(body).getPropertyValue('--bg').trim() || '#0a1730';
+      fitAll();
+      lastRemainLength = remainText.length;
+    } else if (remainText.length !== lastRemainLength) {
+      // 「10:00」→「9:59」のように桁が変わったときは、残り時間だけ合わせ直す
+      lastRemainLength = remainText.length;
+      fitLines($('remain'), '--remain', 1);
+    }
+  }
+
+  // 秒の変わり目に合わせて描き直す（現在時刻と残り時間が同じ瞬間に切り替わるようにするため）
+  function loop() {
+    render();
+    setTimeout(loop, 1000 - (now() % 1000) + 5);
+  }
+
+  // ===== ずらす操作 =====
+  const PANEL_IDLE_MS = 20000;  // 20秒さわらなければ閉じる（閉じ忘れて画面が隠れたままにならないように）
+  let panelTimer = 0;
+
+  function bumpPanel() {
+    clearTimeout(panelTimer);
+    panelTimer = setTimeout(closePanel, PANEL_IDLE_MS);
+  }
+  function openPanel() {
+    $('panel').hidden = false;
+    $('gear').setAttribute('aria-expanded', 'true');
+    setText('panel-msg', '');
+    bumpPanel();
+    render();
+  }
+  function closePanel() {
+    $('panel').hidden = true;
+    $('gear').setAttribute('aria-expanded', 'false');
+    clearTimeout(panelTimer);
+  }
+
+  // delta：＋1／−1。0のときは、ずれを0に戻す
+  function changeShift(delta) {
+    const t = now();
+    const { target, min } = activeShift(t);
+    bumpPanel();
+    if (target < 0) {
+      setText('panel-msg', 'LT会は終了したため、ずらせません');
+      return;
+    }
+    const nextMin = delta === 0 ? 0 : min + delta;
+    if (nextMin > SHIFT_MAX) {
+      setText('panel-msg', `これ以上は遅らせられません（つなぎが0分です）`);
+      return;
+    }
+    if (nextMin < SHIFT_MIN) {
+      setText('panel-msg', `これ以上は早められません（${-SHIFT_MIN}分まで）`);
+      return;
+    }
+    setText('panel-msg', '');
+    saveShift(nextMin === 0 ? null : { day: dayKey(t), practice: isPractice, target, min: nextMin });
+    render();
+  }
+
+  $('gear').addEventListener('click', () => ($('panel').hidden ? openPanel() : closePanel()));
+  $('panel-close').addEventListener('click', closePanel);
+  $('shift-plus').addEventListener('click', () => changeShift(1));
+  $('shift-minus').addEventListener('click', () => changeShift(-1));
+  $('shift-reset').addEventListener('click', () => changeShift(0));
+
+  // ===== 画面を消さない（Wake Lock：画面のスリープを止めるブラウザの機能） =====
+  // 別のアプリに切り替えると止めた状態は外れるので、戻ったときと、画面をさわったときに、もう一度止める
+  const wakeSupported = 'wakeLock' in navigator;
+  let wakeLock = null;
+  let wakePromise = null;   // 試している最中の頼み（同時に何度も頼まないため）
+  let wakeFailed = false;
+
+  function requestWake() {
+    if (!wakeSupported || wakeLock || document.hidden) return Promise.resolve();
+    if (!wakePromise) {
+      wakePromise = (async () => {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeFailed = false;
+          wakeLock.addEventListener('release', () => {
+            wakeLock = null;
+            updateWakeUi();
+            if (!document.hidden) requestWake();
+          });
+        } catch (e) {
+          // 一部のブラウザは、画面をさわった後でないと止められない。次にさわったときに、もう一度試す
+          wakeFailed = true;
+        } finally {
+          wakePromise = null;
+          updateWakeUi();
+        }
+      })();
+    }
+    return wakePromise;
+  }
+
+  function updateWakeUi() {
+    // 止められていないことがわかったときだけ、上の帯に印を出す（試している間は出さない）
+    $('wake-badge').hidden = !!wakeLock || (wakeSupported && !wakeFailed);
+    const manual = '端末の自動ロックをオフにしてください\n' +
+      'iPhone：設定 → 画面表示と明るさ → 自動ロック → なし\n' +
+      'Android：設定 → ディスプレイ → 画面消灯（スリープ）→ いちばん長い時間';
+    setText('panel-wake', wakeLock
+      ? '画面の消灯：止めています'
+      : wakeSupported
+        ? `画面の消灯：止められていません。上の「画面が消えます」を押すと、もう一度試します。それでも止められないときは、${manual}`
+        : `画面の消灯：この端末では止められません。${manual}`);
+  }
+
+  document.addEventListener('pointerdown', () => { if (!wakeLock) requestWake(); });
+  // 印を押したら、もう一度止める。それでも止められなければ、操作の画面に手順を出す
+  $('wake-badge').addEventListener('click', async () => {
+    await requestWake();
+    if (!wakeLock && $('panel').hidden) openPanel();
+  });
+
+  if (isPractice) {
+    setText('practice-badge', '練習');
+    $('practice-badge').hidden = false;
+  }
+  // 別のアプリから戻ったときや、画面の向き・大きさが変わったときは、すぐに描き直す
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    render();
+    requestWake();
+  });
+  updateWakeUi();
+  requestWake();
+
+  // ===== 通信なしで開ける（Service Worker：ページを端末に保存しておく仕組み。sw.js） =====
+  function updateOfflineUi() {
+    const ready = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+    setText('panel-offline', ready
+      ? '通信なしで開く準備：できています'
+      : '通信なしで開く準備：まだです。通信できる場所で、もう一度ページを開いてください');
+  }
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', updateOfflineUi);
+  }
+  updateOfflineUi();
+
+  // 字体は、画面に出る文字の分だけを少しずつ取りに行く。本番中に通信が切れても字体が混ざらないよう、
+  // 全員の名前・タイトルと画面の文字を、開いたときにまとめて読み込んでおく
+  function warmFonts() {
+    if (!document.fonts || !document.fonts.load) return;
+    const scriptText = [...document.scripts].map((s) => s.textContent).join('');
+    const literals = (scriptText.match(/'[^'\n]*'|`[^`]*`/g) || []).join('');
+    const text = [...new Set(document.querySelector('.frame').textContent + $('panel').textContent + literals + '0123456789:')]
+      .join('');
+    ['500', '700'].forEach((w) => document.fonts.load(`${w} 16px "Zen Kaku Gothic New"`, text).catch(() => {}));
+  }
+  window.addEventListener('load', warmFonts);
+  window.addEventListener('resize', fitAll);
+  document.fonts && document.fonts.ready.then(fitAll);
+  loop();
+</script>
+</body>
+</html>

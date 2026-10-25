@@ -84,7 +84,22 @@
   .next-title { font-size: var(--next-title); line-height: 1.4; color: var(--sub); }
   .title:empty, .next-title:empty { display: none; }
 
-  /* ===== 節目の段階（data-level：normal／warn＝残り1分／alert＝残り30秒） ===== */
+  /* ===== 節目の段階（data-level：normal／min3＝残り3分／min2＝残り2分／warn＝残り1分／alert＝残り30秒） ===== */
+  /* 残り3分・2分は色だけを変え、大きさはふだんのまま */
+  body[data-level="min3"] {
+    --bg: #4cc3ee;
+    --fg: #052a3d;
+    --sub: #0b3e57;
+    --accent: #052a3d;
+    --line: rgba(5, 42, 61, 0.3);
+  }
+  body[data-level="min2"] {
+    --bg: #3dbb6b;
+    --fg: #062b14;
+    --sub: #0a361b;
+    --accent: #062b14;
+    --line: rgba(6, 43, 20, 0.3);
+  }
   body[data-level="warn"] {
     --bg: #f2b33d;
     --fg: #2b1d00;
@@ -354,20 +369,27 @@
   }
 
   // ===== 節目 =====
+  const MIN3_SEC = 180;   // 残り3分で水色（色だけ）
+  const MIN2_SEC = 120;   // 残り2分で緑（色だけ）
   const WARN_SEC = 60;    // 残り1分で黄
   const ALERT_SEC = 30;   // 残り30秒で赤
   const HOLD_SEC = 10;    // 0になった後も、大きいまま残す秒数
 
   // 区間の boundary：終わりが節目になる。handover：終わりが次の人への交代になる
-  // level：normal／warn／alert。focus：大きくするもの（remain＝残り時間だけ、next＝次の発表も、current＝替わった人も）
+  // level：normal／min3／min2／warn／alert。focus：大きくするもの（remain＝残り時間だけ、next＝次の発表も、current＝替わった人も）
   function stageOf(seg, prev, t) {
     if (prev && prev.boundary && t - seg.start < HOLD_SEC * 1000) {
       return { level: 'alert', focus: prev.handover ? 'current' : 'remain' };
     }
     if (!seg.boundary) return { level: 'normal', focus: 'remain' };
     const left = Math.ceil((seg.end - t) / 1000);
-    const level = left <= ALERT_SEC ? 'alert' : left <= WARN_SEC ? 'warn' : 'normal';
-    const focus = level !== 'normal' && seg.handover ? 'next' : 'remain';
+    const level = left <= ALERT_SEC ? 'alert'
+      : left <= WARN_SEC ? 'warn'
+        : left <= MIN2_SEC ? 'min2'
+          : left <= MIN3_SEC ? 'min3'
+            : 'normal';
+    // 次の発表を大きくするのは、残り1分から（残り3分・2分は色だけ変える）
+    const focus = (level === 'warn' || level === 'alert') && seg.handover ? 'next' : 'remain';
     return { level, focus };
   }
 

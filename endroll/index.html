@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a1730">
+<meta name="robots" content="noindex">
+<title>一次会エンドロール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<style>
+  :root {
+    --navy: #0a1730;
+    --navy-2: #11214a;
+    --roll-bg: #050b1a;
+    --gold: #d9b45a;
+    --gold-soft: #e8cf92;
+    --gold-line: rgba(217, 180, 90, 0.35);
+    --gold-faint: rgba(217, 180, 90, 0.18);
+    --text: #f3f1ea;
+    --text-sub: #b9c3d6;
+    --muted: #7d89a3;
+    --danger: #e8907f;
+    --mincho: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+    --gothic: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--gothic);
+    font-weight: 500;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+  body.playing { overflow: hidden; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    padding: 0.5em 1.1em;
+    border-radius: 8px;
+    border: 1px solid var(--gold-line);
+    background: transparent;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--gold); }
+  .btn.primary { background: var(--gold); border-color: var(--gold); color: var(--navy); font-weight: 700; }
+  .btn.primary:hover { background: var(--gold-soft); }
+  .btn input[type="file"] { display: none; }
+
+  /* ===== 読み込み画面 ===== */
+  .load { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; }
+  .load-inner { width: min(560px, 100%); text-align: center; }
+  .eyebrow { color: var(--text-sub); letter-spacing: 0.15em; font-size: 14px; }
+  .load h1 { font-family: var(--mincho); font-size: 44px; font-weight: 700; color: var(--gold); letter-spacing: 0.12em; margin: 4px 0 32px; }
+  .drop {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 48px 24px;
+    border: 2px dashed var(--gold-line);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .drop:hover, .drop.is-over { border-color: var(--gold); background: rgba(217, 180, 90, 0.06); }
+  .drop input { display: none; }
+  .drop-main { font-size: 20px; font-weight: 700; color: var(--gold); }
+  .drop-sub { font-size: 14px; color: var(--text-sub); }
+  .load-error { margin-top: 16px; color: var(--danger); font-size: 14px; white-space: pre-line; }
+  .load-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
+  .note { margin-top: 24px; font-size: 13px; color: var(--muted); line-height: 1.8; }
+
+  /* ===== プレビュー画面 ===== */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 12px 20px;
+    background: rgba(10, 23, 48, 0.96);
+    border-bottom: 1px solid var(--gold-line);
+  }
+  .bar-title { font-family: var(--mincho); font-size: 20px; font-weight: 700; color: var(--gold); }
+  .bar-source { font-family: var(--gothic); font-size: 13px; font-weight: 500; color: var(--text-sub); margin-left: 0.6em; }
+  .bar-count { font-size: 14px; color: var(--text-sub); }
+  .bar-count b { color: var(--text); font-weight: 700; }
+  .bar-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 24px; padding: 20px; align-items: start; }
+  .side { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; }
+  .panel { background: var(--navy-2); border: 1px solid var(--gold-faint); border-radius: 12px; padding: 14px 16px; }
+  .panel h2 { font-size: 14px; font-weight: 700; color: var(--gold); letter-spacing: 0.05em; margin-bottom: 8px; }
+  .field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-sub); margin-top: 10px; }
+  .field:first-of-type { margin-top: 0; }
+  .side input[type="text"], .side textarea, .side select {
+    width: 100%;
+    background: var(--navy);
+    border: 1px solid rgba(185, 195, 214, 0.25);
+    border-radius: 6px;
+    padding: 7px 9px;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .side textarea { resize: vertical; line-height: 1.7; }
+  .side input:focus, .side textarea:focus, .side select:focus { outline: none; border-color: var(--gold); }
+  .check, .radio { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 8px; cursor: pointer; }
+  .check input, .radio input { width: 17px; height: 17px; accent-color: var(--gold); flex: none; }
+  .radio input[type="text"] { width: 5.5em; flex: none; padding: 4px 8px; }
+  .radio.is-disabled { color: var(--muted); cursor: default; }
+  .hint-text { font-size: 12px; color: var(--muted); line-height: 1.7; margin-top: 8px; white-space: pre-line; }
+  .hint-text.warn { color: var(--danger); }
+  .example { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .estimate { font-size: 13px; color: var(--text-sub); line-height: 1.8; margin-top: 10px; white-space: pre-line; }
+
+  .list { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .fixed-row {
+    display: grid;
+    grid-template-columns: 4.5em minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 14px;
+    border: 1px dashed var(--gold-line);
+    border-radius: 12px;
+  }
+  .fixed-label { font-size: 13px; color: var(--gold); }
+  .fixed-value { font-family: var(--mincho); font-size: 16px; color: var(--text); overflow-wrap: anywhere; }
+  .fixed-value.keep { font-weight: 800; letter-spacing: 0.15em; color: var(--gold); }
+
+  .group { background: var(--navy-2); border: 1px solid var(--gold-faint); border-radius: 12px; overflow: hidden; }
+  .group-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--gold-faint);
+    background: rgba(217, 180, 90, 0.05);
+  }
+  .group-head.drop-into { box-shadow: inset 0 -3px 0 var(--gold); }
+  .group-title {
+    flex: 1 1 12em;
+    min-width: 8em;
+    font-family: var(--mincho);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--gold);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+  .group-title:hover { border-color: var(--gold-faint); }
+  .group-title:focus { outline: none; border-color: var(--gold); background: var(--navy); }
+  .group-tag, .group-count { font-size: 12px; color: var(--text-sub); white-space: nowrap; }
+  .group.is-excluded .posts, .group.is-excluded .group-title { opacity: 0.4; }
+
+  .posts { list-style: none; }
+  .post {
+    display: grid;
+    grid-template-columns: 14px 2.4em minmax(0, 1fr) auto auto;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    border-top: 1px solid rgba(185, 195, 214, 0.08);
+    cursor: grab;
+  }
+  .post:first-child { border-top: 0; }
+  .post:hover { background: rgba(255, 255, 255, 0.025); }
+  .post.is-off .post-main, .post.is-off .num { opacity: 0.38; }
+  .post.is-dragging { opacity: 0.3; }
+  .post.drop-before { box-shadow: inset 0 3px 0 var(--gold); }
+  .post.drop-after { box-shadow: inset 0 -3px 0 var(--gold); }
+  .grip { color: var(--muted); user-select: none; line-height: 1; padding-top: 5px; font-size: 13px; letter-spacing: -3px; }
+  .num { color: var(--gold); font-variant-numeric: tabular-nums; text-align: right; }
+  .post-body { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.75; }
+  .post-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 6px; font-size: 13px; color: var(--text-sub); }
+  .post-name { color: var(--gold-soft); }
+  .post-name::before { content: "— "; }
+  .post-date { color: var(--muted); font-size: 12px; }
+  .badge { font-size: 12px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--danger); color: var(--danger); white-space: nowrap; }
+  .exclude { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-sub); cursor: pointer; white-space: nowrap; padding-top: 2px; }
+  .exclude input { width: 18px; height: 18px; accent-color: var(--gold); }
+  .row-btns { display: flex; gap: 4px; }
+  .icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid rgba(185, 195, 214, 0.25);
+    background: transparent;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .icon-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+  .icon-btn:disabled { opacity: 0.25; cursor: default; }
+  .empty { padding: 18px; color: var(--muted); text-align: center; font-size: 13px; }
+  .list-message { padding: 24px; text-align: center; color: var(--danger); border: 1px dashed var(--danger); border-radius: 12px; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; padding: 16px; }
+    .side { position: static; max-height: none; overflow: visible; }
+    .post { grid-template-columns: 2em minmax(0, 1fr); }
+    .grip { display: none; }
+    .post .exclude, .post .row-btns { grid-column: 2; }
+  }
+
+  /* ===== 上映画面 =====
+     文字の大きさと間隔は、画面の高さに対する割合（cqh）で決める。どのPC・プロジェクターでも同じ見え方にするため */
+  .stage { position: fixed; inset: 0; z-index: 100; background: var(--roll-bg); overflow: hidden; container-type: size; cursor: none; }
+  .stage.show-ui { cursor: default; }
+  .stage.measure { inset: auto; left: -20000px; top: 0; visibility: hidden; pointer-events: none; z-index: -1; }
+  .roll { position: absolute; left: 0; right: 0; top: 0; text-align: center; will-change: transform; }
+  .r-title { font-family: var(--mincho); font-weight: 700; font-size: 7cqh; line-height: 1.4; color: var(--gold); letter-spacing: 0.08em; padding: 0 5cqw; }
+  .r-subtitle { font-size: 3cqh; color: var(--text-sub); letter-spacing: 0.25em; margin-top: 2cqh; }
+  .r-section { margin-top: 28cqh; }
+  .r-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 3cqh;
+    font-family: var(--mincho);
+    font-weight: 700;
+    font-size: 5cqh;
+    line-height: 1.4;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+  }
+  .r-heading::before, .r-heading::after { content: ""; width: 8cqh; height: 1px; background: var(--gold-line); flex: none; }
+  .r-post { width: min(62cqw, 115cqh); margin: 10cqh auto 0; }
+  .r-heading-wrap + .r-post { margin-top: 8cqh; }
+  /* 日本語を言葉の切れ目で折り返し（「あり／がとう」のように切らない）、最後の行に1〜2字だけ残るのも避ける */
+  .r-body { font-size: 3.6cqh; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; word-break: auto-phrase; text-wrap: pretty; color: var(--text); }
+  .r-name { font-size: 2.6cqh; color: var(--gold-soft); margin-top: 1.4cqh; letter-spacing: 0.05em; }
+  .r-name::before { content: "— "; }
+  .r-staff-list { margin-top: 7cqh; font-family: var(--mincho); font-size: 3.6cqh; line-height: 2.1; color: var(--text); }
+  /* KEEP DRIVEN が真ん中で止まったとき、その上の幹事の名前が画面に残らないよう、画面の半分より広く空ける */
+  .r-end { margin-top: 60cqh; }
+  .r-keep {
+    display: inline-block;
+    font-family: var(--mincho);
+    font-weight: 800;
+    font-size: min(11cqh, 9cqw);
+    line-height: 1.2;
+    letter-spacing: 0.18em;
+    padding-left: 0.18em;  /* 字間の分だけ右にずれるのを戻し、画面の真ん中に置く */
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  .r-keep.lit { animation: keep-glow 3s ease-out forwards; }
+  @keyframes keep-glow {
+    from { text-shadow: 0 0 0 rgba(217, 180, 90, 0); }
+    to { text-shadow: 0 0 3cqh rgba(217, 180, 90, 0.55); }
+  }
+  .hint, .toast {
+    position: absolute;
+    font-family: var(--gothic);
+    color: var(--text);
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .hint { left: 50%; bottom: 3cqh; transform: translateX(-50%); font-size: 14px; padding: 8px 18px; border-radius: 999px; color: var(--text-sub); }
+  .stage.show-ui .hint { opacity: 1; }
+  .toast { right: 3cqw; top: 3cqh; font-size: 16px; padding: 8px 16px; border-radius: 8px; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- 読み込み画面 -->
+<main class="load" id="screen-load">
+  <div class="load-inner">
+    <p class="eyebrow">ADS卒業パーティー in TOKYO ／ 一次会</p>
+    <h1>エンドロール</h1>
+    <label class="drop" id="drop">
+      <input type="file" id="csv-file" accept=".csv,.tsv,.txt,text/csv">
+      <span class="drop-main">CSVファイルを選ぶ</span>
+      <span class="drop-sub">または、ここにファイルを落とす</span>
+    </label>
+    <p class="load-error" id="load-error" hidden></p>
+    <div class="load-actions">
+      <button class="btn" id="last-btn" hidden></button>
+      <button class="btn" id="sample-btn">ダミーのCSVで試す</button>
+    </div>
+    <p class="note">音楽は次の画面で選べます。<br>CSVと音楽ファイルは、このPCの中だけで読みます。どこにも送りません。</p>
+  </div>
+</main>
+
+<!-- プレビュー画面 -->
+<div id="screen-preview" hidden>
+  <header class="bar">
+    <div class="bar-title">プレビュー<span class="bar-source" id="source-name"></span></div>
+    <div class="bar-count" id="count"></div>
+    <div class="bar-actions">
+      <label class="btn">新しいCSVを読み込む<input type="file" id="csv-file-2" accept=".csv,.tsv,.txt,text/csv"></label>
+      <button class="btn primary" id="play-btn">▶ 最初から流す</button>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="side">
+      <section class="panel">
+        <h2>音楽</h2>
+        <div class="btn-row">
+          <label class="btn">音楽ファイルを選ぶ<input type="file" id="music-file" accept="audio/*,.mp3,.m4a,.wav,.aac"></label>
+          <button class="btn" id="music-test" hidden>試しに鳴らす</button>
+        </div>
+        <p class="hint-text" id="music-info">選ばなくても流せます。</p>
+      </section>
+
+      <section class="panel">
+        <h2>長さ</h2>
+        <label class="radio"><input type="radio" name="dmode" value="time">時間を決める<input type="text" id="duration" inputmode="numeric" aria-label="流す長さ（分:秒）"></label>
+        <label class="radio" id="dmode-music-label"><input type="radio" name="dmode" value="music">音楽の長さに合わせる</label>
+        <p class="hint-text">「音楽の長さに合わせる」は、曲が終わる10秒前に KEEP DRIVEN が止まります。</p>
+        <p class="estimate" id="estimate"></p>
+      </section>
+
+      <section class="panel">
+        <h2>表示</h2>
+        <label class="field">冒頭のタイトル<input type="text" id="title"></label>
+        <label class="field">タイトルの下の小さな文字<input type="text" id="subtitle"></label>
+        <label class="check"><input type="checkbox" id="show-names">投稿者の名前を出す</label>
+      </section>
+
+      <section class="panel">
+        <h2>幹事の名前</h2>
+        <textarea id="staff" rows="9" aria-label="幹事の名前"></textarea>
+        <p class="hint-text">1行に1人。この順番で流れます。</p>
+      </section>
+
+      <section class="panel">
+        <h2>まとめて並べ直す</h2>
+        <div class="btn-row">
+          <button class="btn" id="sort-posted">投稿の古い順</button>
+          <button class="btn" id="sort-random">ランダム</button>
+        </div>
+        <p class="hint-text">テーマの中の順番だけを並べ直します。テーマの順番は変わりません。</p>
+      </section>
+
+      <section class="panel">
+        <h2>CSVの列</h2>
+        <div id="columns"></div>
+        <p class="hint-text">列名から自動で選んでいます。違うときだけ直してください。</p>
+      </section>
+
+      <section class="panel">
+        <h2>下見の記録</h2>
+        <p class="hint-text" style="margin-top:0">並び順・対象外・テーマ名は、このPCのブラウザに覚えています。新しいCSVを読み込んでも引き継ぎます。</p>
+        <div class="btn-row" style="margin-top:8px"><button class="btn" id="reset-layout">記録を消して最初の状態に戻す</button></div>
+      </section>
+    </aside>
+    <main class="list" id="list"></main>
+  </div>
+</div>
+
+<!-- 上映画面 -->
+<div class="stage" id="stage" hidden>
+  <div class="roll" id="roll"></div>
+  <div class="toast" id="toast"></div>
+  <div class="hint">Space 一時停止 ／ ↑↓ 速さ ／ M 音楽を小さくして止める ／ F 全画面 ／ Esc 戻る</div>
+</div>
+<!-- 長さの目安を計算するための、見えない上映画面 -->
+<div class="stage measure" id="measure" aria-hidden="true"><div class="roll"></div></div>
+<audio id="audio" preload="auto"></audio>
+
+<script>
+(() => {
+  'use strict';
+
+  // ===== 決まっている文言と初期値 =====
+  const ENDING = 'KEEP DRIVEN';   // 最後に画面の中央で止まる文字（10/25 RYO決定）
+  const STAFF_HEADING = '幹事';
+  const OTHER_THEME = 'その他';   // テーマの#タグがない投稿の見出し
+  const LONG_CHARS = 200;         // これより長い投稿に印を付ける
+  const MUSIC_TAIL_SEC = 10;      // 「音楽の長さに合わせる」とき、KEEP DRIVEN を見せる余韻の秒数
+  const MIN_SEC = 30;
+  const DEFAULTS = {
+    title: 'ADS卒業パーティー in TOKYO',
+    subtitle: '2026.10.31',
+    showNames: true,
+    durationMode: 'time',
+    durationSec: 180,
+    // 幹事13名。Slackの表示名どおり（表示名が空の人は、Slackに出る氏名欄の名前）。10/25確認
+    staff: [
+      'まさじん（吉田正人）',
+      'RYO',
+      'あや',
+      'ゆかちん',
+      'のりぴ(Noriko F)',
+      'ゆーすけ',
+      'もってぃ_吉本',
+      '安藤京介',
+      '金chillめぐ',
+      'うめ',
+      'わたけん(渡邉顕志)',
+      'ゆうや（高橋雄也）',
+      'しんや',
+    ].join('\n'),
+  };
+  // CSVの列名から、どの列が何かを見当付けるための言葉
+  const COLUMN_HINTS = {
+    body: ['本文', '内容', 'メッセージ', 'content', 'body', 'message', 'text', 'comment'],
+    tag: ['ハッシュタグ', 'タグ', 'hashtags', 'hashtag', 'tags', 'tag'],
+    date: ['投稿日時', '日時', '投稿日', '作成日', 'created_at', 'created', 'date', 'time', 'posted'],
+    name: ['ニックネーム', '表示名', '投稿者', '名前', '氏名', 'nickname', 'display_name', 'author', 'name', 'user'],
+  };
+  const COLUMN_LABELS = { body: '本文（必須）', name: '名前', tag: 'タグ', date: '投稿日時' };
+  const TAG_RE = /[#＃]([^\s#＃,，、。.!！?？"'「」『』()（）[\]【】]+)/g;
+
+  // ===== ブラウザに覚えておく仕組み（使えないときも、その場では動く） =====
+  const store = {
+    get(key, fallback) {
+      try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* 覚えられなくても、その場では使える */ }
+    },
+    remove(key) {
+      try { localStorage.removeItem(key); } catch (e) { /* 同上 */ }
+    },
+  };
+  const SETTINGS_KEY = 'endroll-v1-settings';
+  const LAST_KEY = 'endroll-v1-last';   // 前回読み込んだCSV（うっかりページを閉じたときに開き直すため）
+  const layoutKey = () => `endroll-v1-layout-${source.kind}`;  // ダミーのCSVと本物のCSVで、下見の記録を分ける
+
+  let settings = { ...DEFAULTS, ...store.get(SETTINGS_KEY, {}) };
+  // 初期値から変えたものだけを覚える（初期値をあとで直したとき、画面で触っていない項目には直した値が出るように）
+  const saveSettings = () => store.set(SETTINGS_KEY,
+    Object.fromEntries(Object.entries(settings).filter(([k, v]) => v !== DEFAULTS[k])));
+
+  let source = null;   // 読み込んだCSV { kind, name, header, rows }
+  let layout = null;   // 並び順・対象外・テーマ名・列の割り当て
+  let model = [];      // 流れる順のテーマ [{ key, title, excluded, posts }]
+  let allPosts = [];
+
+  const emptyLayout = () => ({
+    columns: null, themeOrder: [], themeTitles: {}, themeExcluded: [], postOrder: {}, postTheme: {}, excluded: [],
+  });
+
+  const $ = (id) => document.getElementById(id);
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  const fmtTime = (sec) => {
+    const s = Math.max(0, Math.round(sec));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  };
+  const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+  const staffNames = () => settings.staff.split('\n').map((s) => s.trim()).filter(Boolean);
+
+  // ===== CSVを読む =====
+  // Excelで保存し直したCSVはShift_JISになることがあるので、UTF-8で読めなければShift_JISで読む
+  function decode(buffer) {
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+    } catch (e) {
+      return new TextDecoder('shift_jis').decode(buffer);
+    }
+  }
+
+  // 本文の中の改行・カンマ・引用符（"" は " 1つ）に対応する。タブ区切りも読む
+  function parseCsv(text) {
+    text = text.replace(/^﻿/, '');
+    const first = text.split(/\r?\n/, 1)[0];
+    const delim = first.split('\t').length > first.split(',').length ? '\t' : ',';
+    const rows = [];
+    let row = [];
+    let field = '';
+    let quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (quoted) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; } else quoted = false;
+        } else field += c;
+      } else if (c === '"' && field === '') {
+        quoted = true;
+      } else if (c === delim) {
+        row.push(field);
+        field = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field);
+        rows.push(row);
+        row = [];
+        field = '';
+      } else field += c;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows.filter((r) => r.some((v) => v.trim() !== ''));
+  }
+
+  function guessColumns(header, rows) {
+    const lower = header.map((h) => h.trim().toLowerCase());
+    const used = new Set();
+    const result = {};
+    // タグと日時を名前より先に決める（tag_name などを名前の列と取り違えないため）
+    // 列名がそのまま一致するものを優先し、次に言葉を含むもの。言葉は COLUMN_HINTS の前にあるものほど優先する
+    for (const field of ['body', 'tag', 'date', 'name']) {
+      let best = -1;
+      let bestScore = 0;
+      lower.forEach((h, i) => {
+        if (used.has(i) || !h || /(^|[_\s-])id$/.test(h)) return;  // user_id などの番号の列は使わない
+        COLUMN_HINTS[field].forEach((hint, rank) => {
+          const score = (h === hint ? 2000 : h.includes(hint) ? 1000 : 0) - rank;
+          if (score > 0 && score > bestScore) { best = i; bestScore = score; }
+        });
+      });
+      if (best >= 0) used.add(best);
+      result[field] = best;
+    }
+    // 本文の列が見つからないときは、文字がいちばん長い列を本文とみなす
+    if (result.body < 0) {
+      let bestLen = 0;
+      header.forEach((_, i) => {
+        if (used.has(i)) return;
+        const avg = rows.reduce((sum, r) => sum + (r[i] || '').length, 0) / Math.max(1, rows.length);
+        if (avg > bestLen) { bestLen = avg; result.body = i; }
+      });
+    }
+    return Object.fromEntries(Object.entries(result).map(([k, i]) => [k, i >= 0 ? header[i] : '']));
+  }
+
+  // 前に選んだ列の割り当てが、今のCSVにもあればそれを使う
+  function resolveColumns(header, rows, saved) {
+    if (saved && saved.body && header.includes(saved.body) &&
+        ['name', 'tag', 'date'].every((f) => !saved[f] || header.includes(saved[f]))) {
+      return saved;
+    }
+    return guessColumns(header, rows);
+  }
+
+  function splitTags(cell) {
+    // データベースから出したときの ["a","b"] や {a,b} の形にも対応する
+    return cell.replace(/[[\]{}"']/g, ' ').split(/[\s,，、;|]+/)
+      .map((t) => t.replace(/^[#＃]+/, '').trim()).filter(Boolean);
+  }
+  const findTags = (text) => [...text.matchAll(TAG_RE)].map((m) => m[1]);
+  const unique = (list) => [...new Set(list)];
+
+  // 投稿を見分ける印（本文と名前から作る）。CSVを読み込み直しても、同じ投稿なら同じ印になる
+  function hash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return (h >>> 0).toString(36);
+  }
+
+  function readPosts() {
+    const col = (f) => (layout.columns[f] ? source.header.indexOf(layout.columns[f]) : -1);
+    const ci = { body: col('body'), name: col('name'), tag: col('tag'), date: col('date') };
+    if (ci.body < 0) return [];
+    const seen = {};
+    const posts = [];
+    source.rows.forEach((r, rowIndex) => {
+      // Excelで保存し直すと改行の記号が変わるので、そろえてから使う
+      const raw = (r[ci.body] || '').replace(/\r\n?/g, '\n').trim();
+      if (!raw) return;
+      const name = ci.name >= 0 ? (r[ci.name] || '').trim() : '';
+      const tags = unique([...(ci.tag >= 0 ? splitTags(r[ci.tag] || '') : []), ...findTags(raw)]);
+      // 空白や改行の違いだけなら同じ投稿とみなす（下見の印が外れないように）
+      const base = hash(`${raw.replace(/\s+/g, ' ')}\u0000${name}`);
+      seen[base] = (seen[base] || 0) + 1;
+      const dateText = ci.date >= 0 ? (r[ci.date] || '').trim() : '';
+      posts.push({
+        id: seen[base] === 1 ? base : `${base}-${seen[base]}`,
+        raw, name, tags, dateText, rowIndex,
+        time: Date.parse(dateText.replace(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/, '$1-$2-$3').replace(' ', 'T')),
+      });
+    });
+    return posts;
+  }
+
+  // #タグが複数あるときは、全体でいちばん多く使われているタグをテーマにする（募集テーマのタグが選ばれやすいように）
+  function assignThemes(posts) {
+    const freq = {};
+    posts.forEach((p) => p.tags.forEach((t) => { freq[t] = (freq[t] || 0) + 1; }));
+    posts.forEach((p) => {
+      let natural = '';
+      p.tags.forEach((t) => { if (!natural || freq[t] > freq[natural]) natural = t; });
+      p.theme = layout.postTheme[p.id] ?? natural;
+    });
+  }
+
+  // 流すときは、本文の中のテーマの#タグを消す（見出しでテーマが分かるため）
+  function cleanBody(raw, themeKeys) {
+    return raw.replace(TAG_RE, (m, tag) => (themeKeys.has(tag) ? '' : m))
+      .replace(/^[ \t　]+|[ \t　]+$/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function byPosted(a, b) {
+    if (!Number.isNaN(a.time) && !Number.isNaN(b.time) && a.time !== b.time) return a.time - b.time;
+    return a.rowIndex - b.rowIndex;
+  }
+
+  // CSVと下見の記録から、流れる順の一覧を作り直す
+  function rebuild() {
+    allPosts = readPosts();
+    assignThemes(allPosts);
+    const byKey = new Map();
+    allPosts.forEach((p) => {
+      if (!byKey.has(p.theme)) byKey.set(p.theme, []);
+      byKey.get(p.theme).push(p);
+    });
+    // 覚えておいた順 → 新しく出てきたテーマ（「その他」は最後）
+    const order = layout.themeOrder.filter((k) => byKey.has(k));
+    [...byKey.keys()].filter((k) => !order.includes(k)).sort((a, b) => (a === '') - (b === '')).forEach((k) => order.push(k));
+    const themeKeys = new Set(order.filter(Boolean));
+    const excluded = new Set(layout.excluded);
+    allPosts.forEach((p) => {
+      p.body = cleanBody(p.raw, themeKeys);
+      p.excluded = excluded.has(p.id);
+    });
+    model = order.map((key) => {
+      const list = byKey.get(key);
+      const ids = new Map(list.map((p) => [p.id, p]));
+      const saved = (layout.postOrder[key] || []).filter((id) => ids.has(id));
+      const savedSet = new Set(saved);
+      // 覚えておいた順 → 新しく増えた投稿（投稿の古い順）をそのテーマの最後に足す
+      const rest = list.filter((p) => !savedSet.has(p.id)).sort(byPosted);
+      return {
+        key,
+        title: layout.themeTitles[key] ?? (key || OTHER_THEME),
+        excluded: layout.themeExcluded.includes(key),
+        posts: [...saved.map((id) => ids.get(id)), ...rest],
+      };
+    });
+    saveLayout();
+    renderColumns();
+    renderPreview();
+  }
+
+  function saveLayout() {
+    if (!source) return;
+    layout.themeOrder = model.map((t) => t.key);
+    layout.postOrder = Object.fromEntries(model.map((t) => [t.key, t.posts.map((p) => p.id)]));
+    layout.themeExcluded = model.filter((t) => t.excluded).map((t) => t.key);
+    // 今のCSVにない投稿の対象外の印も残す（古いCSVを読み込んだあとで最新に戻しても、外した投稿が戻らないように）
+    const current = new Set(allPosts.map((p) => p.id));
+    layout.excluded = [
+      ...layout.excluded.filter((id) => !current.has(id)),
+      ...allPosts.filter((p) => p.excluded).map((p) => p.id),
+    ];
+    store.set(layoutKey(), layout);
+  }
+
+  const isOn = (theme, p) => !theme.excluded && !p.excluded && p.body !== '';
+
+  // ===== 読み込み =====
+  function openSource(src) {
+    const rows = parseCsv(src.text);
+    if (rows.length < 2) throw new Error('CSVに投稿の行がありません（1行目は列名として読みます）。');
+    const header = rows[0].map((h) => h.trim());
+    source = { kind: src.kind, name: src.name, header, rows: rows.slice(1) };
+    layout = { ...emptyLayout(), ...store.get(layoutKey(), {}) };
+    layout.columns = resolveColumns(header, source.rows, layout.columns);
+    if (src.kind === 'csv') store.set(LAST_KEY, { name: src.name, text: src.text, at: Date.now() });
+    $('source-name').textContent = src.kind === 'sample' ? 'ダミーのCSV' : src.name;
+    rebuild();
+    showScreen('preview');
+  }
+
+  async function loadCsvFile(file) {
+    try {
+      openSource({ kind: 'csv', name: file.name, text: decode(await file.arrayBuffer()) });
+    } catch (e) {
+      showError(`CSVを読み込めませんでした。\n${e.message}`);
+    }
+  }
+
+  async function loadSample() {
+    try {
+      const res = await fetch('sample.csv', { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      openSource({ kind: 'sample', name: 'sample.csv', text: decode(await res.arrayBuffer()) });
+    } catch (e) {
+      showError(`ダミーのCSVを開けませんでした（ファイルを直接開いているときは使えません）。\n${e.message}`);
+    }
+  }
+
+  function showError(message) {
+    if (!$('screen-load').hidden) {
+      $('load-error').textContent = message;
+      $('load-error').hidden = false;
+    } else {
+      alert(message);
+    }
+  }
+
+  function showScreen(name) {
+    $('screen-load').hidden = name !== 'load';
+    $('screen-preview').hidden = name !== 'preview';
+    $('load-error').hidden = true;
+    if (name === 'preview') window.scrollTo(0, 0);
+  }
+
+  function renderLastButton() {
+    const last = store.get(LAST_KEY, null);
+    const btn = $('last-btn');
+    btn.hidden = !last;
+    if (!last) return;
+    const d = new Date(last.at);
+    btn.textContent = `前回のCSVを開く（${last.name}・${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}）`;
+  }
+
+  // ===== プレビュー =====
+  function renderCount() {
+    const on = model.reduce((n, t) => n + t.posts.filter((p) => isOn(t, p)).length, 0);
+    const themes = model.filter((t) => t.posts.some((p) => isOn(t, p))).length;
+    const count = $('count');
+    count.replaceChildren(
+      '流す ', el('b', '', `${on}件`), `／対象外 ${allPosts.length - on}件（全${allPosts.length}件）・テーマ ${themes}`,
+    );
+  }
+
+  function fixedRow(label, value, opts = {}) {
+    const row = el('div', 'fixed-row');
+    row.append(el('div', 'fixed-label', label), el('div', `fixed-value${opts.keep ? ' keep' : ''}`, value));
+    const btns = el('div', 'row-btns');
+    if (opts.playFrom) {
+      const b = el('button', 'icon-btn', '▶');
+      b.dataset.action = opts.playFrom;
+      b.title = 'ここから流す';
+      btns.append(b);
+    }
+    row.append(btns);
+    return row;
+  }
+
+  function iconBtn(action, text, title, disabled) {
+    const b = el('button', 'icon-btn', text);
+    b.dataset.action = action;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.disabled = !!disabled;
+    return b;
+  }
+
+  function excludeBox(action, checked) {
+    const label = el('label', 'exclude');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.dataset.action = action;
+    box.checked = checked;
+    label.append(box, '対象外');
+    return label;
+  }
+
+  function postRow(p, theme, index, number) {
+    const li = el('li', `post${number ? '' : ' is-off'}`);
+    li.draggable = true;
+    li.dataset.id = p.id;
+    li.append(el('span', 'grip', '⋮⋮'), el('span', 'num', number ? String(number) : '—'));
+    const main = el('div', 'post-main');
+    main.append(el('p', 'post-body', p.body || '（本文なし）'));
+    const meta = el('p', 'post-meta');
+    if (settings.showNames && p.name) meta.append(el('span', 'post-name', p.name));
+    if (p.dateText) meta.append(el('span', 'post-date', p.dateText));
+    if (!p.body) meta.append(el('span', 'badge', '本文がないので流れません'));
+    if (p.body.length > LONG_CHARS) meta.append(el('span', 'badge', `長い投稿（${p.body.length}字）`));
+    if (meta.childNodes.length) main.append(meta);
+    const btns = el('div', 'row-btns');
+    btns.append(
+      iconBtn('up', '↑', '1つ上へ', index === 0),
+      iconBtn('down', '↓', '1つ下へ', index === theme.posts.length - 1),
+      iconBtn('play-from', '▶', 'ここから流す', !number),
+    );
+    li.append(main, excludeBox('exclude', p.excluded), btns);
+    return li;
+  }
+
+  function renderPreview() {
+    const frag = document.createDocumentFragment();
+    frag.append(fixedRow('冒頭', [settings.title, settings.subtitle].filter(Boolean).join('　') || '（なし）'));
+    if (!allPosts.length) {
+      frag.append(el('div', 'list-message', layout.columns.body
+        ? '本文のある投稿がありません。左の「CSVの列」で、本文の列が合っているか確かめてください。'
+        : '左の「CSVの列」で、本文の列を選んでください。'));
+    }
+    let n = 0;
+    model.forEach((theme, ti) => {
+      const group = el('section', `group${theme.excluded ? ' is-excluded' : ''}`);
+      group.dataset.key = theme.key;
+      const head = el('div', 'group-head');
+      const title = el('input', 'group-title');
+      title.type = 'text';
+      title.value = theme.title;
+      title.dataset.action = 'theme-title';
+      title.setAttribute('aria-label', '見出し');
+      const on = theme.posts.filter((p) => isOn(theme, p)).length;
+      const btns = el('div', 'row-btns');
+      btns.append(
+        iconBtn('theme-up', '↑', 'テーマを上へ', ti === 0),
+        iconBtn('theme-down', '↓', 'テーマを下へ', ti === model.length - 1),
+        iconBtn('play-theme', '▶', 'このテーマから流す', on === 0),
+      );
+      head.append(
+        title,
+        el('span', 'group-tag', theme.key ? `#${theme.key}` : 'タグなし'),
+        el('span', 'group-count', `流す ${on}／${theme.posts.length}件`),
+        excludeBox('theme-exclude', theme.excluded),
+        btns,
+      );
+      const list = el('ol', 'posts');
+      theme.posts.forEach((p, pi) => {
+        if (isOn(theme, p)) n++;
+        list.append(postRow(p, theme, pi, isOn(theme, p) ? n : 0));
+      });
+      if (!theme.posts.length) list.append(el('li', 'empty', 'ここに投稿をドラッグできます'));
+      group.append(head, list);
+      frag.append(group);
+    });
+    const names = staffNames();
+    frag.append(fixedRow(STAFF_HEADING, names.length ? names.join('、') : '（なし）', { playFrom: 'play-staff' }));
+    frag.append(fixedRow('最後', ENDING, { keep: true, playFrom: 'play-end' }));
+    $('list').replaceChildren(frag);
+    renderCount();
+    scheduleEstimate();
+  }
+
+  const groupEl = (key) => [...document.querySelectorAll('#list .group')].find((g) => g.dataset.key === key);
+  const postEl = (id) => document.querySelector(`#list .post[data-id="${id}"]`);
+  const themeOf = (key) => model.find((t) => t.key === key);
+  function findPost(id) {
+    for (const theme of model) {
+      const index = theme.posts.findIndex((p) => p.id === id);
+      if (index >= 0) return { theme, index, post: theme.posts[index] };
+    }
+    return null;
+  }
+
+  // 並び替えたあと、動かした行がマウスの下に残るように画面をずらす（続けて↑↓を押せるように）
+  function changeKeepingPlace(getEl, change, action) {
+    const before = getEl()?.getBoundingClientRect().top;
+    change();
+    saveLayout();
+    renderPreview();
+    const after = getEl();
+    if (after && before != null) window.scrollBy(0, after.getBoundingClientRect().top - before);
+    if (after && action) after.querySelector(`[data-action="${action}"]:not(:disabled)`)?.focus();
+  }
+
+  function movePost(id, targetKey, targetIndex) {
+    const from = findPost(id);
+    const to = themeOf(targetKey);
+    if (!from || !to) return;
+    if (from.theme === to && (targetIndex === from.index || targetIndex === from.index + 1)) return;
+    from.theme.posts.splice(from.index, 1);
+    if (from.theme === to && targetIndex > from.index) targetIndex--;
+    to.posts.splice(targetIndex, 0, from.post);
+    if (from.theme !== to) {
+      from.post.theme = to.key;
+      layout.postTheme[id] = to.key;
+    }
+    saveLayout();
+    renderPreview();
+  }
+
+  $('list').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const row = btn.closest('.post');
+    const group = btn.closest('.group');
+    const action = btn.dataset.action;
+    if (action === 'up' || action === 'down') {
+      const id = row.dataset.id;
+      changeKeepingPlace(() => postEl(id), () => {
+        const f = findPost(id);
+        const j = f.index + (action === 'up' ? -1 : 1);
+        f.theme.posts.splice(f.index, 1);
+        f.theme.posts.splice(j, 0, f.post);
+      }, action);
+    } else if (action === 'theme-up' || action === 'theme-down') {
+      const key = group.dataset.key;
+      changeKeepingPlace(() => groupEl(key), () => {
+        const i = model.findIndex((t) => t.key === key);
+        const j = i + (action === 'theme-up' ? -1 : 1);
+        const [theme] = model.splice(i, 1);
+        model.splice(j, 0, theme);
+      }, action);
+    } else if (action === 'play-from') {
+      play({ id: row.dataset.id });
+    } else if (action === 'play-theme') {
+      play({ key: group.dataset.key });
+    } else if (action === 'play-staff') {
+      play({ staff: true });
+    } else if (action === 'play-end') {
+      play({ end: true });
+    }
+  });
+
+  $('list').addEventListener('change', (e) => {
+    const t = e.target;
+    if (t.dataset.action === 'exclude') {
+      findPost(t.closest('.post').dataset.id).post.excluded = t.checked;
+    } else if (t.dataset.action === 'theme-exclude') {
+      themeOf(t.closest('.group').dataset.key).excluded = t.checked;
+    } else return;
+    saveLayout();
+    renderPreview();
+  });
+
+  // 見出しの書き換えは、入力のたびに覚える（一覧は作り直さない。入力中の文字が消えないように）
+  $('list').addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.dataset.action !== 'theme-title') return;
+    const theme = themeOf(t.closest('.group').dataset.key);
+    theme.title = t.value.trim() || (theme.key || OTHER_THEME);
+    layout.themeTitles[theme.key] = theme.title;
+    saveLayout();
+    scheduleEstimate();
+  });
+
+  // ===== ドラッグで並び替え（テーマをまたいで動かすと、その投稿のテーマも変わる） =====
+  let dragId = null;
+  let dropMark = null;
+  function clearDropMark() {
+    if (dropMark) dropMark.el.classList.remove(dropMark.cls);
+    dropMark = null;
+  }
+  function setDropMark(target, cls) {
+    if (dropMark && dropMark.el === target && dropMark.cls === cls) return;
+    clearDropMark();
+    target.classList.add(cls);
+    dropMark = { el: target, cls };
+  }
+  function dropTarget(e) {
+    const row = e.target.closest('.post');
+    if (row) {
+      const key = row.closest('.group').dataset.key;
+      const index = themeOf(key).posts.findIndex((p) => p.id === row.dataset.id);
+      const rect = row.getBoundingClientRect();
+      const after = e.clientY > rect.top + rect.height / 2;
+      return { key, index: index + (after ? 1 : 0), mark: row, cls: after ? 'drop-after' : 'drop-before' };
+    }
+    const head = e.target.closest('.group-head') || e.target.closest('.empty');
+    if (head) {
+      const group = head.closest('.group');
+      return { key: group.dataset.key, index: 0, mark: group.querySelector('.group-head'), cls: 'drop-into' };
+    }
+    return null;
+  }
+  $('list').addEventListener('dragstart', (e) => {
+    const row = e.target.closest?.('.post');
+    if (!row) return;
+    dragId = row.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', dragId);
+    row.classList.add('is-dragging');
+  });
+  $('list').addEventListener('dragend', () => {
+    dragId = null;
+    clearDropMark();
+    document.querySelectorAll('.is-dragging').forEach((r) => r.classList.remove('is-dragging'));
+  });
+  $('list').addEventListener('dragover', (e) => {
+    if (!dragId) return;
+    const target = dropTarget(e);
+    if (!target) { clearDropMark(); return; }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropMark(target.mark, target.cls);
+  });
+  $('list').addEventListener('drop', (e) => {
+    if (!dragId) return;
+    const target = dropTarget(e);
+    e.preventDefault();
+    clearDropMark();
+    if (target) movePost(dragId, target.key, target.index);
+  });
+
+  // ===== 左の設定 =====
+  function renderColumns() {
+    const box = $('columns');
+    box.replaceChildren();
+    for (const field of ['body', 'name', 'tag', 'date']) {
+      const label = el('label', 'field', COLUMN_LABELS[field]);
+      const select = el('select');
+      select.dataset.field = field;
+      select.append(new Option('（なし）', ''));
+      source.header.forEach((h) => select.append(new Option(h || '（列名なし）', h)));
+      select.value = layout.columns[field] || '';
+      const i = layout.columns[field] ? source.header.indexOf(layout.columns[field]) : -1;
+      const sample = i >= 0 ? (source.rows.find((r) => (r[i] || '').trim()) || [])[i] : '';
+      label.append(select, el('span', 'example', sample ? `例：${sample.replace(/\s+/g, ' ')}` : ''));
+      box.append(label);
+    }
+  }
+  $('columns').addEventListener('change', (e) => {
+    const field = e.target.dataset.field;
+    if (!field) return;
+    layout.columns = { ...layout.columns, [field]: e.target.value };
+    rebuild();
+  });
+
+  function initSettingsForm() {
+    $('title').value = settings.title;
+    $('subtitle').value = settings.subtitle;
+    $('show-names').checked = settings.showNames;
+    $('staff').value = settings.staff;
+    $('duration').value = fmtTime(settings.durationSec);
+    document.querySelector(`input[name="dmode"][value="${settings.durationMode}"]`).checked = true;
+  }
+  $('title').addEventListener('input', (e) => { settings.title = e.target.value; saveSettings(); renderPreview(); });
+  $('subtitle').addEventListener('input', (e) => { settings.subtitle = e.target.value; saveSettings(); renderPreview(); });
+  $('show-names').addEventListener('change', (e) => { settings.showNames = e.target.checked; saveSettings(); renderPreview(); });
+  $('staff').addEventListener('input', (e) => { settings.staff = e.target.value; saveSettings(); renderPreview(); });
+  document.querySelectorAll('input[name="dmode"]').forEach((r) => r.addEventListener('change', (e) => {
+    settings.durationMode = e.target.value;
+    saveSettings();
+    scheduleEstimate();
+  }));
+  // 「3:00」「3」（分）「2:45」の形で受け付ける
+  $('duration').addEventListener('change', (e) => {
+    const m = e.target.value.trim().replace('：', ':').match(/^(\d+)(?::(\d{1,2}))?$/);
+    if (m) settings.durationSec = Math.max(MIN_SEC, Number(m[1]) * 60 + Number(m[2] || 0));
+    e.target.value = fmtTime(settings.durationSec);
+    settings.durationMode = 'time';
+    document.querySelector('input[name="dmode"][value="time"]').checked = true;
+    saveSettings();
+    scheduleEstimate();
+  });
+  $('duration').addEventListener('focus', () => {
+    settings.durationMode = 'time';
+    document.querySelector('input[name="dmode"][value="time"]').checked = true;
+    saveSettings();
+    scheduleEstimate();
+  });
+
+  function reorderAll(kind) {
+    const message = kind === 'posted'
+      ? 'テーマの中の順番を、投稿の古い順に並べ直します。手で並べ替えた順番は消えます。よろしいですか？'
+      : 'テーマの中の順番を、ランダムに並べ直します。手で並べ替えた順番は消えます。よろしいですか？';
+    if (!confirm(message)) return;
+    model.forEach((t) => {
+      if (kind === 'posted') {
+        t.posts.sort(byPosted);
+      } else {
+        for (let i = t.posts.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [t.posts[i], t.posts[j]] = [t.posts[j], t.posts[i]];
+        }
+      }
+    });
+    saveLayout();
+    renderPreview();
+  }
+  $('sort-posted').addEventListener('click', () => reorderAll('posted'));
+  $('sort-random').addEventListener('click', () => reorderAll('random'));
+
+  $('reset-layout').addEventListener('click', () => {
+    if (!confirm('並び順・対象外・テーマ名・テーマの移動の記録を消して、CSVを読み込んだ直後の状態に戻します。よろしいですか？')) return;
+    store.remove(layoutKey());
+    layout = { ...emptyLayout(), columns: guessColumns(source.header, source.rows) };
+    rebuild();
+  });
+
+  // ===== 音楽 =====
+  const audio = $('audio');
+  let musicUrl = null;
+  let musicName = '';
+  const hasMusic = () => !!musicUrl && Number.isFinite(audio.duration) && audio.duration > 0;
+
+  function setMusic(file) {
+    if (musicUrl) URL.revokeObjectURL(musicUrl);
+    musicUrl = URL.createObjectURL(file);
+    musicName = file.name;
+    audio.src = musicUrl;
+    $('music-info').textContent = `${musicName}（読み込み中）`;
+    $('music-info').classList.remove('warn');
+  }
+  audio.addEventListener('loadedmetadata', () => {
+    $('music-info').textContent = `${musicName}（${fmtTime(audio.duration)}）`;
+    $('music-test').hidden = false;
+    renderMusicMode();
+    scheduleEstimate();
+  });
+  audio.addEventListener('error', () => {
+    if (!musicUrl) return;
+    $('music-info').textContent = `${musicName} は、このブラウザでは再生できません。mp3 か m4a を選んでください。`;
+    $('music-info').classList.add('warn');
+    $('music-test').hidden = true;
+    musicUrl = null;
+    renderMusicMode();
+    scheduleEstimate();
+  });
+  audio.addEventListener('play', () => { $('music-test').textContent = '止める'; });
+  audio.addEventListener('pause', () => { $('music-test').textContent = '試しに鳴らす'; });
+  $('music-file').addEventListener('change', (e) => {
+    if (e.target.files[0]) setMusic(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('music-test').addEventListener('click', () => {
+    if (audio.paused) {
+      audio.volume = 1;
+      audio.play().catch(() => alert('音楽を再生できませんでした。'));
+    } else {
+      audio.pause();
+    }
+  });
+  function renderMusicMode() {
+    $('dmode-music-label').classList.toggle('is-disabled', !hasMusic());
+  }
+
+  // ===== 長さ =====
+  const musicMode = () => settings.durationMode === 'music' && hasMusic();
+  const totalSec = () => (musicMode() ? Math.max(MIN_SEC, audio.duration - MUSIC_TAIL_SEC) : settings.durationSec);
+
+  function buildRoll(roll) {
+    const frag = document.createDocumentFragment();
+    if (settings.title || settings.subtitle) {
+      const head = el('div', 'r-head');
+      if (settings.title) head.append(el('div', 'r-title', settings.title));
+      if (settings.subtitle) head.append(el('div', 'r-subtitle', settings.subtitle));
+      frag.append(head);
+    }
+    model.forEach((theme) => {
+      const posts = theme.posts.filter((p) => isOn(theme, p));
+      if (!posts.length) return;
+      const section = el('section', 'r-section');
+      section.dataset.key = theme.key;
+      const wrap = el('div', 'r-heading-wrap');
+      wrap.append(el('h2', 'r-heading', theme.title));
+      section.append(wrap);
+      posts.forEach((p) => {
+        const item = el('div', 'r-post');
+        item.dataset.id = p.id;
+        item.append(el('p', 'r-body', p.body));
+        if (settings.showNames && p.name) item.append(el('p', 'r-name', p.name));
+        section.append(item);
+      });
+      frag.append(section);
+    });
+    const names = staffNames();
+    if (names.length) {
+      const section = el('section', 'r-section r-staff');
+      const wrap = el('div', 'r-heading-wrap');
+      wrap.append(el('h2', 'r-heading', STAFF_HEADING));
+      const list = el('div', 'r-staff-list');
+      names.forEach((n) => list.append(el('div', '', n)));
+      section.append(wrap, list);
+      frag.append(section);
+    }
+    const end = el('div', 'r-end');
+    end.append(el('div', 'r-keep', ENDING));
+    frag.append(end);
+    roll.replaceChildren(frag);
+  }
+
+  // 流し始め：全体の先頭が画面の下の端。流し終わり：KEEP DRIVEN の真ん中が画面の真ん中
+  function geometry(stage, roll) {
+    const height = stage.clientHeight;
+    const keep = roll.querySelector('.r-keep');
+    const keepCenter = keep.offsetTop + keep.offsetHeight / 2;
+    const startY = height;
+    const endY = height / 2 - keepCenter;
+    return { height, startY, endY, distance: startY - endY };
+  }
+
+  let estimateTimer = 0;
+  function scheduleEstimate() {
+    clearTimeout(estimateTimer);
+    estimateTimer = setTimeout(renderEstimate, 150);
+  }
+  // このPCの画面の大きさで見えない上映画面を作り、文字が画面を横切る秒数を出す
+  function renderEstimate() {
+    if (!source) return;
+    const measure = $('measure');
+    measure.style.width = `${screen.width}px`;
+    measure.style.height = `${screen.height}px`;
+    const roll = measure.firstElementChild;
+    buildRoll(roll);
+    const geo = geometry(measure, roll);
+    const total = totalSec();
+    const cross = geo.height / (geo.distance / total);
+    const lines = [
+      `流れる長さ：${fmtTime(total)}${musicMode() ? '（音楽に合わせる）' : ''}`,
+      `文字が画面の下から上まで動くのに 約${Math.round(cross)}秒`,
+    ];
+    if (settings.durationMode === 'music' && !hasMusic()) lines.unshift('音楽が選ばれていないので、決めた時間で流します。');
+    const est = $('estimate');
+    est.textContent = `${lines.join('\n')}\n（このPCの画面 ${screen.width}×${screen.height} で計算）`;
+    if (cross < 10) est.textContent += '\n速めです。長さを延ばすか、流す件数を減らすと読みやすくなります。';
+    est.classList.toggle('warn', cross < 10);
+    roll.replaceChildren();
+  }
+
+  // ===== 上映 =====
+  const run = { active: false, paused: false, ended: false, elapsed: 0, total: 0, rate: 1, last: 0, geo: null, raf: 0 };
+  let wakeLock = null;
+  let fadeTimer = 0;
+
+  async function requestWakeLock() {
+    try { wakeLock = navigator.wakeLock ? await navigator.wakeLock.request('screen') : null; } catch (e) { wakeLock = null; }
+  }
+  function releaseWakeLock() {
+    if (wakeLock) wakeLock.release().catch(() => {});
+    wakeLock = null;
+  }
+
+  // 途中から流すときは、その行が画面の下から4分の1のところに見えている状態から始める
+  function startElapsed(from, roll) {
+    let target = null;
+    if (from.id) target = roll.querySelector(`.r-post[data-id="${from.id}"]`);
+    if (from.key != null) target = [...roll.querySelectorAll('.r-section')].find((s) => s.dataset.key === from.key);
+    if (from.staff) target = roll.querySelector('.r-staff');
+    if (from.end) target = roll.querySelector('.r-end');
+    if (!target) return 0;
+    const travelled = target.offsetTop + run.geo.height * 0.25;
+    return run.total * Math.min(1, Math.max(0, travelled / run.geo.distance));
+  }
+
+  async function play(from) {
+    const stage = $('stage');
+    const roll = $('roll');
+    // 押したボタンに印が残っていると、スペースキーでもう一度押されてしまうので外す
+    document.activeElement?.blur();
+    buildRoll(roll);
+    roll.style.transform = `translate3d(0, ${window.innerHeight}px, 0)`;
+    roll.querySelector('.r-keep').classList.remove('lit');
+    stage.hidden = false;
+    document.body.classList.add('playing');
+    // 全画面にできなくても、窓の大きさで流す。返事が来ないブラウザもあるので、待つのは1秒まで
+    if (!document.fullscreenElement) {
+      try {
+        await Promise.race([document.documentElement.requestFullscreen(), new Promise((r) => setTimeout(r, 1000))]);
+      } catch (e) { /* 同上 */ }
+    }
+    await document.fonts.ready;
+    await nextFrame();
+    await nextFrame();
+    run.total = totalSec();
+    run.geo = geometry(stage, roll);
+    run.elapsed = from ? startElapsed(from, roll) : 0;
+    run.rate = 1;
+    run.paused = false;
+    run.ended = run.elapsed >= run.total;
+    if (run.ended) roll.querySelector('.r-keep').classList.add('lit');
+    run.active = true;
+    clearInterval(fadeTimer);
+    startMusic();
+    requestWakeLock();
+    showUi();
+    run.last = performance.now();
+    cancelAnimationFrame(run.raf);
+    run.raf = requestAnimationFrame(tick);
+  }
+
+  // 途中から流すときは、音楽も同じだけ進めて始める
+  function startMusic() {
+    audio.pause();
+    if (!hasMusic() || run.elapsed >= audio.duration) return;
+    audio.volume = 1;
+    audio.currentTime = run.elapsed;
+    audio.play().catch(() => toast('音楽を再生できませんでした'));
+  }
+
+  function tick(now) {
+    if (!run.active) return;
+    const dt = (now - run.last) / 1000;
+    run.last = now;
+    if (!run.paused && !run.ended) {
+      run.elapsed += dt * run.rate;
+      if (run.elapsed >= run.total) {
+        run.elapsed = run.total;
+        run.ended = true;
+        $('roll').querySelector('.r-keep').classList.add('lit');
+      }
+    }
+    const y = run.geo.startY - (run.elapsed / run.total) * run.geo.distance;
+    $('roll').style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
+    run.raf = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    run.active = false;
+    cancelAnimationFrame(run.raf);
+    clearInterval(fadeTimer);
+    audio.pause();
+    releaseWakeLock();
+    $('stage').hidden = true;
+    $('stage').classList.remove('show-ui');
+    document.body.classList.remove('playing');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }
+
+  function togglePause() {
+    // 止まりきったあとは、音楽だけを止める・鳴らす
+    if (run.ended) {
+      if (audio.paused) { if (hasMusic() && audio.currentTime < audio.duration) audio.play().catch(() => {}); } else audio.pause();
+      return;
+    }
+    run.paused = !run.paused;
+    if (hasMusic()) {
+      if (run.paused) audio.pause();
+      else if (run.elapsed < audio.duration) audio.play().catch(() => {});
+    }
+    toast(run.paused ? '一時停止中' : '再開');
+  }
+
+  function changeRate(delta) {
+    run.rate = Math.min(2, Math.max(0.5, Math.round((run.rate + delta) * 100) / 100));
+    toast(`速さ ${Math.round(run.rate * 100)}%`);
+  }
+
+  function fadeOutMusic() {
+    if (audio.paused) return;
+    clearInterval(fadeTimer);
+    const start = audio.volume;
+    const began = performance.now();
+    toast('音楽を小さくしています');
+    fadeTimer = setInterval(() => {
+      const p = Math.min(1, (performance.now() - began) / 3000);
+      audio.volume = start * (1 - p);
+      if (p >= 1) { clearInterval(fadeTimer); audio.pause(); audio.volume = 1; }
+    }, 50);
+  }
+
+  let toastTimer = 0;
+  function toast(text) {
+    const t = $('toast');
+    t.textContent = text;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+  }
+
+  // マウスを動かしたときだけ、矢印と操作の案内を出す
+  let uiTimer = 0;
+  function showUi() {
+    $('stage').classList.add('show-ui');
+    clearTimeout(uiTimer);
+    uiTimer = setTimeout(() => $('stage').classList.remove('show-ui'), 2500);
+  }
+  $('stage').addEventListener('mousemove', showUi);
+
+  document.addEventListener('keydown', (e) => {
+    if (!run.active) return;
+    if (e.key === ' ') { e.preventDefault(); togglePause(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); changeRate(0.05); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); changeRate(-0.05); }
+    else if (e.key === 'm' || e.key === 'M') fadeOutMusic();
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else document.documentElement.requestFullscreen().catch(() => {});
+    } else if (e.key === 'Escape') {
+      // 全画面のときの Esc はブラウザが全画面を戻すだけ。もう一度押すとプレビューに戻る
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else stop();
+    }
+  });
+
+  // 全画面の出入りなどで画面の大きさが変わったら、進み具合はそのままで位置だけ計算し直す
+  window.addEventListener('resize', () => {
+    if (run.active) run.geo = geometry($('stage'), $('roll'));
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (run.active && document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  // ===== ファイルの受け取り =====
+  const isAudioFile = (f) => f.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg)$/i.test(f.name);
+  const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
+  function takeFile(file) {
+    if (!file) return;
+    if (isAudioFile(file)) {
+      if (source) setMusic(file);
+      else showError('先にCSVを読み込んでください。音楽は次の画面で選べます。');
+    } else {
+      loadCsvFile(file);
+    }
+  }
+  $('csv-file').addEventListener('change', (e) => { takeFile(e.target.files[0]); e.target.value = ''; });
+  $('csv-file-2').addEventListener('change', (e) => { takeFile(e.target.files[0]); e.target.value = ''; });
+  $('sample-btn').addEventListener('click', loadSample);
+  $('last-btn').addEventListener('click', () => {
+    const last = store.get(LAST_KEY, null);
+    if (!last) return;
+    try {
+      openSource({ kind: 'csv', name: last.name, text: last.text });
+    } catch (e) {
+      showError(`前回のCSVを開けませんでした。\n${e.message}`);
+    }
+  });
+  $('play-btn').addEventListener('click', () => play(null));
+
+  // CSVや音楽ファイルを、画面のどこに落としても読み込む
+  document.addEventListener('dragover', (e) => {
+    if (dragId || !hasFiles(e) || run.active) return;
+    e.preventDefault();
+    $('drop').classList.add('is-over');
+  });
+  document.addEventListener('dragleave', (e) => {
+    if (!e.relatedTarget) $('drop').classList.remove('is-over');
+  });
+  document.addEventListener('drop', (e) => {
+    $('drop').classList.remove('is-over');
+    if (dragId || !hasFiles(e) || run.active) return;
+    e.preventDefault();
+    takeFile(e.dataTransfer.files[0]);
+  });
+
+  initSettingsForm();
+  renderLastButton();
+  renderMusicMode();
+  document.fonts.ready.then(scheduleEstimate);  // 字体が届いたら、長さの目安を計算し直す
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* 保存できなくても、通信できれば動く */ });
+  }
+})();
+</script>
+</body>
+</html>

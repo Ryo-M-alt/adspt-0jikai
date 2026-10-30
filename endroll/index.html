@@ -166,8 +166,8 @@
   .fixed-value { font-family: var(--mincho); font-size: 16px; color: var(--text); overflow-wrap: anywhere; }
   .fixed-value.keep { font-weight: 800; letter-spacing: 0.15em; color: var(--gold); }
 
-  .group { background: var(--navy-2); border: 1px solid var(--gold-faint); border-radius: 12px; overflow: hidden; }
-  .group-head {
+  .group, .deck { background: var(--navy-2); border: 1px solid var(--gold-faint); border-radius: 12px; overflow: hidden; }
+  .group-head, .deck-head {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -233,6 +233,25 @@
   .icon-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
   .icon-btn:disabled { opacity: 0.25; cursor: default; }
   .empty { padding: 18px; color: var(--muted); text-align: center; font-size: 13px; }
+
+  /* 一覧のいちばん上の、プレゼンのスライド */
+  .deck-title { flex: 1 1 12em; font-family: var(--mincho); font-size: 19px; font-weight: 700; color: var(--gold); padding: 3px 8px; }
+  .deck-rows { list-style: none; }
+  .deck-row { display: grid; grid-template-columns: 2.4em 7.2em minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px; border-top: 1px solid rgba(185, 195, 214, 0.08); }
+  .deck-row:first-child { border-top: 0; }
+  .slide-thumb { width: 7.2em; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--gold-faint); border-radius: 4px; background: var(--roll-bg); font-size: 11px; color: var(--muted); }
+  .slide-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .deck-text { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+  /* iPhoneで原稿を見ながら送る */
+  .remote-status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); }
+  .remote-status::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
+  .remote-status[data-state="connected"]::before { background: var(--ok); }
+  .remote-status[data-state="waiting"]::before, .remote-status[data-state="starting"]::before { background: var(--warn); }
+  .remote-status[data-state="offline"]::before, .remote-status[data-state="nolib"]::before, .remote-status[data-state="taken"]::before { background: var(--danger); }
+  .remote-qr { margin-top: 12px; }
+  .remote-qr-code { width: 200px; max-width: 100%; background: #fff; border-radius: 8px; padding: 6px; }
+  .remote-qr-code svg { display: block; width: 100%; height: auto; }
+  .deck-text small { display: block; font-size: 12px; font-weight: 500; color: var(--text-sub); }
   .list-message { padding: 24px; text-align: center; color: var(--danger); border: 1px dashed var(--danger); border-radius: 12px; }
 
   @media (max-width: 900px) {
@@ -302,9 +321,53 @@
     white-space: nowrap;
   }
   .hint { left: 50%; bottom: 3cqh; transform: translateX(-50%); font-size: 14px; padding: 8px 18px; border-radius: 999px; color: var(--text-sub); }
-  .stage.show-ui .hint { opacity: 1; }
+  .stage.show-ui .hint, .slides.show-ui .hint { opacity: 1; }
   .toast { right: 3cqw; top: 3cqh; font-size: 16px; padding: 8px 16px; border-radius: 8px; }
   .toast.show { opacity: 1; }
+
+  /* ===== プレゼン画面（エンドロールの前の、LODGEの紹介） =====
+     上映画面と同じく、大きさは画面の高さ・幅に対する割合（cqh・cqw）で決める */
+  .slides {
+    /* 文字のスライドの配色。会場の明るさを見て、プレビューで選ぶ（初期値はネイビー×ゴールド。10/29 RYO） */
+    --s-bg: var(--navy);
+    --s-side: var(--roll-bg);
+    --s-main: var(--text);
+    --s-accent: var(--gold);
+    --s-sub: var(--text-sub);
+    --s-line: var(--gold-line);
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    overflow: hidden;
+    container-type: size;
+    cursor: none;
+    background: var(--s-bg);
+    color: var(--s-main);
+  }
+  /* ロッジ色：山小屋の絵に合わせた、クリーム×オレンジ×黒 */
+  .slides.theme-lodge { --s-bg: #f3e6cb; --s-side: #ecdcbb; --s-main: #1e1410; --s-accent: #cc4a1e; --s-sub: #6b5646; --s-line: rgba(30, 20, 16, 0.25); }
+  .slides.show-ui { cursor: default; }
+  .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s ease; }
+  .slide.is-current { opacity: 1; }
+  /* 最後のスライドの次は、スライドをゆっくり消しながら、下のエンドロールを見せる */
+  .slides.is-leaving { opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+  /* 文字のスライド：左に文字、右にQRコード */
+  .slide-text { position: absolute; left: 0; top: 0; bottom: 0; right: 30cqw; display: flex; flex-direction: column; justify-content: center; padding: 0 6cqw 0 8cqw; }
+  .slide-eyebrow { font-size: 2.4cqh; font-weight: 700; letter-spacing: 0.3em; color: var(--s-accent); }
+  .slide-rule { width: 8cqh; height: 2px; margin: 4cqh 0; background: var(--s-accent); }
+  /* スライドの文字はゴシック体（10/29 RYO） */
+  .slide-key { font-weight: 700; font-size: 10cqh; line-height: 1.35; letter-spacing: 0.04em; word-break: auto-phrase; text-wrap: balance; }
+  .slide-sub { font-weight: 500; font-size: 4.2cqh; letter-spacing: 0.08em; color: var(--s-sub); margin-top: 2.4cqh; }
+  .slide-side { position: absolute; right: 0; top: 0; bottom: 0; width: 30cqw; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.6cqh; background: var(--s-side); border-left: 1px solid var(--s-line); }
+  .qr-card { background: #fff; padding: 2.2cqh; border-radius: 1.6cqh; box-shadow: 0 1cqh 4cqh rgba(0, 0, 0, 0.25); }
+  .qr-card img { display: block; width: 26cqh; height: 26cqh; image-rendering: pixelated; }
+  .qr-cap { text-align: center; font-size: 2.4cqh; line-height: 1.6; color: var(--s-sub); }
+  .qr-cap b { display: block; font-size: 2.8cqh; color: var(--s-main); }
+  /* 絵のスライド：絵を画面いっぱいに出し、右下にQRコードを白い台紙つきで重ねる */
+  .slide-art { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .qr-card.is-float { position: absolute; right: 3cqh; bottom: 3cqh; padding: 1.6cqh 1.6cqh 1.2cqh; text-align: center; }
+  .qr-card.is-float img { width: 20cqh; height: 20cqh; }
+  .qr-card.is-float span { display: block; margin-top: 0.8cqh; font-size: 1.9cqh; font-weight: 700; color: #1e1410; }
 </style>
 </head>
 <body>
@@ -336,11 +399,39 @@
     <div class="bar-verdict" id="bar-verdict"></div>
     <div class="bar-actions">
       <label class="btn">新しいCSVを読み込む<input type="file" id="csv-file-2" accept=".csv,.tsv,.txt,text/csv"></label>
-      <button class="btn primary" id="play-btn">▶ 最初から流す</button>
+      <button class="btn" id="play-btn">▶ エンドロールから流す</button>
+      <button class="btn primary" id="slides-btn">▶ プレゼンから始める</button>
     </div>
   </header>
   <div class="layout">
     <aside class="side">
+      <section class="panel">
+        <h2>プレゼンのスライドの色</h2>
+        <label class="radio"><input type="radio" name="slide-theme" value="navy">ネイビー×ゴールド</label>
+        <label class="radio"><input type="radio" name="slide-theme" value="lodge">ロッジ色（クリーム×オレンジ）</label>
+        <p class="hint-text">文字のスライドの色です。照明を落とした会場ならネイビー、明るい会場ならロッジ色が見やすくなります。会場の下見で決めます。</p>
+      </section>
+
+      <section class="panel">
+        <h2>iPhoneで原稿を見ながら送る</h2>
+        <p class="remote-status" id="remote-status"></p>
+        <div class="btn-row" style="margin-top:10px">
+          <label class="btn">原稿ファイルを選ぶ<input type="file" id="script-file" accept=".md,.txt,text/markdown,text/plain"></label>
+        </div>
+        <p class="hint-text" id="script-info"></p>
+        <div class="btn-row" style="margin-top:12px">
+          <button class="btn" id="remote-qr-btn">iPhoneとつなぐ（QRを出す）</button>
+        </div>
+        <div class="remote-qr" id="remote-qr" hidden>
+          <div class="remote-qr-code" id="remote-qr-code"></div>
+          <p class="hint-text warn">プロジェクターに映さないでください（読み取った人がスライドを送れてしまいます）。</p>
+          <p class="hint-text">iPhoneのカメラで読み取り、出てきたページを開きます。つながると、QRは自動で隠れます。</p>
+          <p class="example" id="remote-url"></p>
+          <div class="btn-row" style="margin-top:8px"><button class="btn" id="remote-renew">QRを作り直す</button></div>
+        </div>
+        <p class="hint-text">一度つないだiPhoneは、どちらかのページを開き直しても、自動でつながり直します。知らない人がつないだときや、QRが映ってしまったときは「QRを作り直す」を押すと、それまでのQRは使えなくなります。原稿はページには入れず、このPCのブラウザにだけ覚えます。</p>
+      </section>
+
       <section class="panel">
         <h2>音楽</h2>
         <div class="btn-row">
@@ -409,10 +500,18 @@
   <div class="toast" id="toast"></div>
   <div class="hint">Space 一時停止 ／ ↑↓ 速さ ／ M 音楽を小さくして止める ／ F 全画面 ／ Esc 戻る</div>
 </div>
+<!-- プレゼン画面（エンドロールの前の、LODGEの紹介） -->
+<div class="slides" id="slides" hidden>
+  <div id="deck"></div>
+  <div class="hint" id="slides-hint"></div>
+</div>
 <!-- 長さの目安を計算するための、見えない上映画面 -->
 <div class="stage measure" id="measure" aria-hidden="true"><div class="roll"></div></div>
 <audio id="audio" preload="auto"></audio>
 
+<!-- iPhoneとつなぐ中継サービス（PeerJS）と、つなぐためのQRコードを作る部品。どちらも通信なしで開けるよう、このフォルダに置いた -->
+<script src="vendor/peerjs.min.js"></script>
+<script src="vendor/qrcode.js"></script>
 <script>
 (() => {
   'use strict';
@@ -433,6 +532,7 @@
     durationMode: 'time',
     durationSec: 180,
     staffSec: 4,   // 幹事の名前を1人ずつ読み上げてアピールするため、1人あたりこの秒数の間隔で流す（10/29 RYO依頼）
+    slideTheme: 'navy',   // プレゼンの文字のスライドの色。navy（ネイビー×ゴールド）か lodge（ロッジ色）。10/29 RYO
     // 幹事13名。Slackの表示名どおり（表示名が空の人は、Slackに出る氏名欄の名前）。10/25確認
     staff: [
       'まさじん（吉田正人）',
@@ -450,6 +550,25 @@
       'しんや',
     ].join('\n'),
   };
+  // エンドロールの前に話す、LODGE（卒業生コミュニティ）の紹介のスライド。原稿は ../presentation-script.md（10/29 RYO決定）
+  // text：文字のスライド（sub は下に小さく出す言葉）、image：絵のスライド
+  // cue：原稿のどこからそのスライドを出すか（この言葉を含む行から）。iPhoneに出す原稿を、スライドごとに区切るのに使う
+  const SLIDES = [
+    { text: 'これからどうするか', cue: 'みなさん、パーティーは楽しんでいただけましたか' },
+    // 「ロッジは、山小屋という意味です」〜登山部の話も、この絵のまま
+    { image: 'images/lodge-cover.jpg', label: '表紙の絵（AI DRIVEN LODGE ようこそ、ロッジへ。）', cue: 'ご紹介します。' },
+    // コミュニティの目的・ロッジでやりたいことも、この絵のまま
+    { image: 'images/lodge-hut.jpg', label: '山小屋の絵（持ってきたものを分け合って…）', cue: 'みんなで持ち寄ったもので成り立つ仕組み' },
+    { text: '① もくもくBot', sub: '行動の見える化', cue: '一つ目は、行動の見える化' },
+    // 「なお、これらはまだありません」も、このまま
+    { text: '② ナレッジツール', sub: '集合知', cue: '二つ目は、集合知' },
+    { text: 'それぞれの道', cue: '皆さんは、これから、どんな山に登りたいですか' },
+  ];
+  const ROLL_CUE = '（エンドロール開始）';   // 原稿のここから後は、エンドロールが流れている間に話す
+  const SLIDE_EYEBROW = 'AI DRIVEN LODGE';
+  // 全部のスライドに出すQRコード。リンク先は LODGE の Discord の招待リンク https://discord.gg/HjuWuaB6uE （無期限。10/29 RYO確認）
+  const QR_SRC = 'images/lodge-qr.png';
+  const QR_NAME = 'AI Driven Lodge';
   // CSVの列名から、どの列が何かを見当付けるための言葉
   const COLUMN_HINTS = {
     body: ['本文', '内容', 'メッセージ', 'content', 'body', 'message', 'text', 'comment'],
@@ -831,9 +950,38 @@
     return li;
   }
 
+  // 一覧のいちばん上に、エンドロールの前のプレゼンのスライドを出す（好きなスライドから始められる。リハーサル用）
+  function deckGroup() {
+    const group = el('section', 'deck');
+    const head = el('div', 'deck-head');
+    head.append(el('span', 'deck-title', 'プレゼン（LODGEの紹介）'), el('span', 'group-count', `${SLIDES.length}枚`));
+    const list = el('ol', 'deck-rows');
+    SLIDES.forEach((s, i) => {
+      const li = el('li', 'deck-row');
+      const thumb = el('div', 'slide-thumb', s.image ? null : '文字');
+      if (s.image) {
+        const img = el('img');
+        img.src = s.image;
+        img.alt = '';
+        thumb.append(img);
+      }
+      const text = el('div', 'deck-text', s.text || s.label);
+      if (s.sub) text.append(el('small', '', s.sub));
+      const btns = el('div', 'row-btns');
+      const b = iconBtn('play-slide', '▶', 'このスライドから始める');
+      b.dataset.index = String(i);
+      btns.append(b);
+      li.append(el('span', 'num', String(i + 1)), thumb, text, btns);
+      list.append(li);
+    });
+    group.append(head, list);
+    return group;
+  }
+
   function renderPreview() {
     const frag = document.createDocumentFragment();
-    frag.append(fixedRow('冒頭', [settings.title, settings.subtitle].filter(Boolean).join('　') || '（なし）'));
+    frag.append(deckGroup());
+    frag.append(fixedRow('冒頭',[settings.title, settings.subtitle].filter(Boolean).join('　') || '（なし）'));
     if (!allPosts.length) {
       frag.append(el('div', 'list-message', layout.columns.body
         ? '本文のある投稿がありません。左の「CSVの列」で、本文の列が合っているか確かめてください。'
@@ -948,6 +1096,8 @@
       play({ staff: true });
     } else if (action === 'play-end') {
       play({ end: true });
+    } else if (action === 'play-slide') {
+      startSlides(Number(btn.dataset.index));
     }
   });
 
@@ -1063,7 +1213,13 @@
     $('staff-sec').value = String(settings.staffSec);
     $('duration').value = fmtTime(settings.durationSec);
     document.querySelector(`input[name="dmode"][value="${settings.durationMode}"]`).checked = true;
+    (document.querySelector(`input[name="slide-theme"][value="${settings.slideTheme}"]`)
+      || document.querySelector('input[name="slide-theme"]')).checked = true;
   }
+  document.querySelectorAll('input[name="slide-theme"]').forEach((r) => r.addEventListener('change', (e) => {
+    settings.slideTheme = e.target.value;
+    saveSettings();
+  }));
   $('title').addEventListener('input', (e) => { settings.title = e.target.value; saveSettings(); renderPreview(); });
   $('subtitle').addEventListener('input', (e) => { settings.subtitle = e.target.value; saveSettings(); renderPreview(); });
   $('show-names').addEventListener('change', (e) => { settings.showNames = e.target.checked; saveSettings(); renderPreview(); });
@@ -1471,7 +1627,7 @@
   }
 
   // ===== 上映 =====
-  const run = { active: false, paused: false, ended: false, elapsed: 0, total: 0, rate: 1, last: 0, geo: null, raf: 0 };
+  const run = { active: false, paused: false, ended: false, elapsed: 0, total: 0, rate: 1, last: 0, geo: null, raf: 0, fromSlides: false };
   let wakeLock = null;
   let fadeTimer = 0;
 
@@ -1481,6 +1637,18 @@
   function releaseWakeLock() {
     if (wakeLock) wakeLock.release().catch(() => {});
     wakeLock = null;
+  }
+
+  // 全画面にできなくても、窓の大きさで続ける。返事が来ないブラウザもあるので、待つのは1秒まで
+  async function enterFullscreen() {
+    if (document.fullscreenElement) return;
+    try {
+      await Promise.race([document.documentElement.requestFullscreen(), new Promise((r) => setTimeout(r, 1000))]);
+    } catch (e) { /* 同上 */ }
+  }
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else document.documentElement.requestFullscreen().catch(() => {});
   }
 
   // 途中から流すときは、その行が画面の下から4分の1のところに見えている状態から始める
@@ -1495,7 +1663,8 @@
     return run.total * Math.min(1, Math.max(0, travelled / run.geo.distance));
   }
 
-  async function play(from) {
+  // fromSlides：プレゼンの最後のスライドから、そのまま流すとき
+  async function play(from, fromSlides = false) {
     const stage = $('stage');
     const roll = $('roll');
     // 押したボタンに印が残っていると、スペースキーでもう一度押されてしまうので外す
@@ -1505,12 +1674,7 @@
     roll.querySelector('.r-keep').classList.remove('lit');
     stage.hidden = false;
     document.body.classList.add('playing');
-    // 全画面にできなくても、窓の大きさで流す。返事が来ないブラウザもあるので、待つのは1秒まで
-    if (!document.fullscreenElement) {
-      try {
-        await Promise.race([document.documentElement.requestFullscreen(), new Promise((r) => setTimeout(r, 1000))]);
-      } catch (e) { /* 同上 */ }
-    }
+    await enterFullscreen();
     await document.fonts.ready;
     await nextFrame();
     await nextFrame();
@@ -1519,16 +1683,18 @@
     run.elapsed = from ? startElapsed(from, roll) : 0;
     run.rate = 1;
     run.paused = false;
+    run.fromSlides = fromSlides;
     run.ended = run.elapsed >= run.total;
     if (run.ended) roll.querySelector('.r-keep').classList.add('lit');
     run.active = true;
     clearInterval(fadeTimer);
     startMusic();
     requestWakeLock();
-    showUi();
+    if (!fromSlides) showUi();   // プレゼンから続けて流すときは、操作の案内を出さない（会場に見えるため）
     run.last = performance.now();
     cancelAnimationFrame(run.raf);
     run.raf = requestAnimationFrame(tick);
+    sendState();
   }
 
   // 途中から流すときは、音楽も同じだけ進めて始める
@@ -1557,7 +1723,8 @@
     run.raf = requestAnimationFrame(tick);
   }
 
-  function stop() {
+  // keepScreen：プレゼンのスライドに戻るときは、全画面のままにする
+  function stop(keepScreen = false) {
     run.active = false;
     cancelAnimationFrame(run.raf);
     clearInterval(fadeTimer);
@@ -1565,8 +1732,10 @@
     releaseWakeLock();
     $('stage').hidden = true;
     $('stage').classList.remove('show-ui');
+    if (keepScreen) return;
     document.body.classList.remove('playing');
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    sendState();
   }
 
   function togglePause() {
@@ -1624,11 +1793,14 @@
     if (e.key === ' ') { e.preventDefault(); togglePause(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); changeRate(0.05); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); changeRate(-0.05); }
+    else if (ROLL_BACK_KEYS.includes(e.key) && canBackToSlides()) {
+      e.preventDefault();
+      e.stopImmediatePropagation();   // 同じキーで、スライドがもう1枚戻らないように
+      rollToSlides();
+    }
     else if (e.key === 'm' || e.key === 'M') fadeOutMusic();
-    else if (e.key === 'f' || e.key === 'F') {
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      else document.documentElement.requestFullscreen().catch(() => {});
-    } else if (e.key === 'Escape') {
+    else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    else if (e.key === 'Escape') {
       // 全画面のときの Esc はブラウザが全画面を戻すだけ。もう一度押すとプレビューに戻る
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       else stop();
@@ -1640,17 +1812,380 @@
     if (run.active) run.geo = layoutRoll($('stage'), $('roll'), run.total);
   });
   document.addEventListener('visibilitychange', () => {
-    if (run.active && document.visibilityState === 'visible') requestWakeLock();
+    if ((run.active || deck.active) && document.visibilityState === 'visible') requestWakeLock();
   });
 
+  // ===== プレゼン（エンドロールの前の、LODGEの紹介） =====
+  const deck = { active: false, index: 0 };
+  let leaveTimer = 0;   // エンドロールへ移るとき、スライドを消し終える時計
+  const NEXT_KEYS = ['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'];   // PageDown・PageUp は、スライド送りのリモコン用
+  const PREV_KEYS = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'];
+
+  function qrCard(float) {
+    const card = el('div', `qr-card${float ? ' is-float' : ''}`);
+    const img = el('img');
+    img.src = QR_SRC;
+    img.alt = `${QR_NAME} の Discord に参加するQRコード`;
+    card.append(img);
+    if (float) card.append(el('span', '', 'Discordで参加'));
+    return card;
+  }
+
+  // スライドは、ページを開いたときに全部作っておく（絵を先に読み込んでおき、送ったときにすぐ出るように）
+  function buildDeck() {
+    $('deck').replaceChildren(...SLIDES.map((s) => {
+      const slide = el('section', `slide ${s.image ? 'is-image' : 'is-text'}`);
+      if (s.image) {
+        const img = el('img', 'slide-art');
+        img.src = s.image;
+        img.alt = s.label;
+        slide.append(img, qrCard(true));
+      } else {
+        const text = el('div', 'slide-text');
+        text.append(el('p', 'slide-eyebrow', SLIDE_EYEBROW), el('div', 'slide-rule'), el('p', 'slide-key', s.text));
+        if (s.sub) text.append(el('p', 'slide-sub', s.sub));
+        const side = el('aside', 'slide-side');
+        const cap = el('p', 'qr-cap');
+        cap.append(el('b', '', QR_NAME), 'Discordで参加できます');
+        side.append(qrCard(false), cap);
+        slide.append(text, side);
+      }
+      return slide;
+    }));
+  }
+
+  function showSlide(i) {
+    deck.index = Math.min(SLIDES.length - 1, Math.max(0, i));
+    $('deck').querySelectorAll('.slide').forEach((s, j) => s.classList.toggle('is-current', j === deck.index));
+    renderSlidesHint();
+    sendState();
+  }
+  // マウスを動かしたときに出す案内。iPhoneとつながっているかも出す（操作する人が確かめられるように）
+  function renderSlidesHint() {
+    const phone = remote.conn?.open ? 'iPhone つながっています' : 'iPhone つながっていません';
+    $('slides-hint').textContent = `${deck.index + 1}／${SLIDES.length}　→ 次へ ／ ← 戻る ／ F 全画面 ／ Esc 戻る　｜　${phone}`;
+  }
+
+  // showHint：始めに操作の案内を出すか（エンドロールから戻ったときは、会場に見えるので出さない）
+  async function startSlides(index, showHint = true) {
+    document.activeElement?.blur();
+    const slides = $('slides');
+    // エンドロールへ移る途中で戻ってきたときは、スライドを消すのをやめる
+    clearTimeout(leaveTimer);
+    slides.classList.remove('is-leaving');
+    slides.classList.toggle('theme-lodge', settings.slideTheme === 'lodge');
+    // iPhoneとつなぐQRは隠しておく（プレゼンのあとプレビューに戻ったとき、プロジェクターに映らないように）
+    $('remote-qr').hidden = true;
+    updateRemoteUi();
+    showSlide(index);
+    slides.hidden = false;
+    document.body.classList.add('playing');
+    deck.active = true;
+    sendState();
+    requestWakeLock();
+    if (showHint) showSlidesUi();
+    await enterFullscreen();
+  }
+
+  function stopSlides() {
+    deck.active = false;
+    releaseWakeLock();
+    $('slides').hidden = true;
+    $('slides').classList.remove('show-ui');
+    document.body.classList.remove('playing');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    sendState();
+  }
+
+  function nextSlide() {
+    if (deck.index < SLIDES.length - 1) showSlide(deck.index + 1);
+    else slidesToRoll();
+  }
+  function prevSlide() {
+    if (deck.index > 0) showSlide(deck.index - 1);
+  }
+
+  // 最後のスライドの次は、そのままエンドロールを流す。音楽もここから（10/29 RYO確認）
+  // スライドの下でエンドロールを始め、スライドを1.2秒かけて消す。全画面のまま続ける
+  function slidesToRoll() {
+    deck.active = false;
+    releaseWakeLock();   // エンドロールのほうで取り直す
+    const slides = $('slides');
+    slides.classList.remove('show-ui');
+    slides.classList.add('is-leaving');
+    play(null, true);
+    leaveTimer = setTimeout(() => {
+      slides.hidden = true;
+      slides.classList.remove('is-leaving');
+    }, 1200);
+  }
+
+  // うっかり早く送ってしまったとき用：エンドロールの始めの10秒の間は、← か PageUp で最後のスライドに戻れる
+  const ROLL_BACK_KEYS = ['ArrowLeft', 'PageUp'];   // ↑ は、エンドロールでは速さを変えるキーなので使わない
+  const BACK_TO_SLIDES_SEC = 10;
+  const canBackToSlides = () => run.active && run.fromSlides && run.elapsed < BACK_TO_SLIDES_SEC;
+  function rollToSlides() {
+    stop(true);
+    startSlides(SLIDES.length - 1, false);
+  }
+
+  let slidesUiTimer = 0;
+  function showSlidesUi() {
+    $('slides').classList.add('show-ui');
+    clearTimeout(slidesUiTimer);
+    slidesUiTimer = setTimeout(() => $('slides').classList.remove('show-ui'), 2500);
+  }
+  $('slides').addEventListener('mousemove', showSlidesUi);
+
+  document.addEventListener('keydown', (e) => {
+    if (!deck.active) return;
+    if (NEXT_KEYS.includes(e.key)) {
+      e.preventDefault();
+      if (!e.repeat) nextSlide();   // 押しっぱなしで何枚も進まないように
+    } else if (PREV_KEYS.includes(e.key)) {
+      e.preventDefault();
+      if (!e.repeat) prevSlide();
+    } else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    else if (e.key === 'Escape') {
+      // 全画面のときの Esc はブラウザが全画面を戻すだけ。もう一度押すとプレビューに戻る
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else stopSlides();
+    }
+  });
+
+  // ===== プレゼンの原稿（iPhoneに出す） =====
+  // 原稿は公開しないため、ページには入れず、Macで原稿ファイル（presentation-script.md）を読み込む（10/30 RYO決定）。
+  // 読み込んだ原稿はこのPCのブラウザに覚え、iPhoneにだけ送る
+  const SCRIPT_KEY = 'endroll-v1-script';
+  let script = store.get(SCRIPT_KEY, null);   // { name, text, at }
+  const squash = (text) => text.replace(/[\s　]+/g, '');
+
+  // 原稿を、スライドの cue（とエンドロールの ROLL_CUE）を含む行で区切る。
+  // 見つからない・順番が違うときは、区切らずに全文だけを出す（iPhoneの原稿はスライドに合わせて動かない）
+  function parseScript(text) {
+    let body = text.replace(/\r\n?/g, '\n');
+    // 説明書きと本文の間の「---」より後を本文とみなす（presentation-script.md の形）
+    const rule = body.match(/^-{3,}[ \t]*$/m);
+    if (rule) body = body.slice(rule.index + rule[0].length);
+    const lines = body.split('\n').map((l) => l.trim());
+    const toParas = (ls) => ls.join('\n').split(/\n{2,}/).map((p) => p.split('\n').filter(Boolean)).filter((p) => p.length);
+    const starts = [];
+    for (const cue of [...SLIDES.map((sl) => sl.cue), ROLL_CUE]) {
+      const from = starts.length ? starts[starts.length - 1] + 1 : 0;
+      const i = lines.findIndex((l, j) => j >= from && squash(l).includes(squash(cue)));
+      if (i < 0) return { synced: false, parts: [{ index: null, paras: toParas(lines) }] };
+      starts.push(i);
+    }
+    return {
+      synced: true,
+      // 1枚目は、cue より前の行も含める
+      parts: starts.map((start, k) => ({
+        index: k < SLIDES.length ? k : 'roll',
+        paras: toParas(lines.slice(k === 0 ? 0 : start, starts[k + 1] ?? lines.length)),
+      })),
+    };
+  }
+
+  function renderScriptInfo() {
+    const info = $('script-info');
+    if (!script) {
+      info.textContent = '原稿が読み込まれていません。presentation-script.md を選ぶと、iPhoneに出ます。';
+      info.classList.remove('warn');
+      return;
+    }
+    const d = new Date(script.at);
+    const when = `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const synced = parseScript(script.text).synced;
+    info.textContent = synced
+      ? `原稿：${script.name}（${when}に読み込み）。スライド${SLIDES.length}枚とエンドロールの切り替え位置が見つかったので、iPhoneの原稿もスライドに合わせて動きます。`
+      : `原稿：${script.name}（${when}に読み込み）。スライドの切り替え位置が原稿の中に見つからないので、iPhoneには全文だけを出します（スライドに合わせて動きません）。`;
+    info.classList.toggle('warn', !synced);
+  }
+
+  async function loadScriptFile(file) {
+    script = { name: file.name, text: decode(await file.arrayBuffer()), at: Date.now() };
+    store.set(SCRIPT_KEY, script);
+    renderScriptInfo();
+    sendHello();
+  }
+  $('script-file').addEventListener('change', (e) => {
+    if (e.target.files[0]) loadScriptFile(e.target.files[0]);
+    e.target.value = '';
+  });
+
+  // ===== iPhoneのリモコン =====
+  // 無料の中継サービス（PeerJS）で、MacとiPhoneを直接つなぐ（10/29 RYO決定）。Mac（このページ）が待ち受け、
+  // iPhoneは remote.html#<待ち受けの名前> を開いてつなぐ。待ち受けの名前はこのブラウザに覚え、
+  // ページを開き直しても同じにする（iPhoneがQRを読み直さずにつなぎ直せるように）。
+  // やりとり：Mac→iPhone は hello（スライドと原稿）と state（いまの場面）、iPhone→Mac は ping（2秒ごと）と go（次へ／戻る）。
+  // つながらなくても、Macのキーでは送れる
+  const REMOTE_ID_KEY = 'endroll-v1-remote-id';
+  const REMOTE_TIMEOUT_MS = 6000;   // iPhoneから6秒なにも届かなければ、切れたとみなす
+  const REMOTE_STATES = {
+    nolib: '中継サービスの部品を読み込めませんでした。iPhoneとはつなげません（Macのキーでは送れます）。',
+    starting: '中継サービスにつないでいます…',
+    offline: '中継サービスにつながりません。ネットにつながっているか確かめてください（自動でつなぎ直します。Macのキーでは送れます）。',
+    taken: '待ち受けの名前がほかで使われています。このページをほかのタブやブラウザでも開いていたら、閉じてください（自動でつなぎ直します）。',
+    waiting: 'iPhoneを待っています',
+    connected: 'iPhoneとつながっています',
+  };
+  const remote = { peer: null, conn: null, lastSeen: 0, failed: false, qrFor: '' };
+
+  function newRemoteId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    return `adsptroll-${[...crypto.getRandomValues(new Uint8Array(16))].map((b) => chars[b % chars.length]).join('')}`;
+  }
+  let remoteId = store.get(REMOTE_ID_KEY, null) || newRemoteId();
+  store.set(REMOTE_ID_KEY, remoteId);
+  const remoteUrl = () => `${new URL('remote.html', location.href).href.split('#')[0]}#${remoteId}`;
+
+  function startHost() {
+    if (!window.Peer) { updateRemoteUi(); return; }
+    remote.peer?.destroy();
+    remote.failed = false;
+    const peer = new Peer(remoteId, { debug: 0 });
+    remote.peer = peer;
+    peer.on('open', () => { if (remote.peer === peer) { remote.failed = false; updateRemoteUi(); } });
+    peer.on('connection', (conn) => { if (remote.peer === peer) acceptRemote(conn); });
+    peer.on('disconnected', updateRemoteUi);
+    // iPhoneがいないだけ（peer-unavailable）は気にしない。それ以外は、下の見回りでつなぎ直す
+    peer.on('error', (err) => {
+      if (remote.peer !== peer || err.type === 'peer-unavailable') return;
+      remote.failed = err.type === 'unavailable-id' ? 'taken' : true;
+      updateRemoteUi();
+    });
+    updateRemoteUi();
+  }
+
+  function acceptRemote(conn) {
+    const current = remote.conn;
+    if (current?.open && performance.now() - remote.lastSeen < REMOTE_TIMEOUT_MS) {
+      // すでにつながっているiPhoneがあるときは、ほかの端末は断る（知らない人に操作されないように）
+      conn.on('open', () => { conn.send({ type: 'busy' }); setTimeout(() => conn.close(), 1000); });
+      return;
+    }
+    current?.close();
+    remote.conn = conn;
+    remote.lastSeen = performance.now();
+    conn.on('open', () => {
+      if (remote.conn !== conn) return;
+      remote.lastSeen = performance.now();
+      $('remote-qr').hidden = true;   // つながったら、QRは隠す
+      sendHello();
+      updateRemoteUi();
+    });
+    conn.on('data', (msg) => {
+      if (remote.conn !== conn || !msg || typeof msg !== 'object') return;
+      remote.lastSeen = performance.now();
+      if (msg.type === 'go') remoteGo(msg.dir);
+      else sendState();   // ping には、いまの場面を返す
+    });
+    const lost = () => {
+      if (remote.conn !== conn) return;
+      remote.conn = null;
+      updateRemoteUi();
+    };
+    conn.on('close', lost);
+    conn.on('error', lost);
+  }
+
+  // iPhoneの「次へ／戻る」。Macのキーと同じ動き（エンドロールの始めの10秒だけ、戻るで最後のスライドに戻れる）
+  function remoteGo(dir) {
+    if (deck.active) {
+      if (dir === 'next') nextSlide();
+      else if (dir === 'prev') prevSlide();
+    } else if (dir === 'prev' && canBackToSlides()) {
+      rollToSlides();
+    }
+    sendState();
+  }
+
+  function remoteSend(msg) {
+    if (!remote.conn?.open) return;
+    try { remote.conn.send(msg); } catch (e) { /* 切れていたら、見回りで気づく */ }
+  }
+  // いまの場面：preview（プレゼンを始める前）／slides（スライド）／roll（エンドロール）
+  function sendState() {
+    const mode = deck.active ? 'slides' : (run.active || !$('stage').hidden) ? 'roll' : 'preview';
+    remoteSend({ type: 'state', mode, index: deck.index, canBack: canBackToSlides() });
+  }
+  function sendHello() {
+    remoteSend({
+      type: 'hello',
+      slides: SLIDES.map((sl) => ({ text: sl.text || '', sub: sl.sub || '', image: sl.image || '', label: sl.label || '' })),
+      script: script ? { name: script.name, ...parseScript(script.text) } : null,
+    });
+    sendState();
+  }
+
+  function updateRemoteUi() {
+    const peer = remote.peer;
+    const state = !window.Peer ? 'nolib'
+      : remote.conn?.open ? 'connected'
+      : peer?.open && !peer.disconnected ? 'waiting'
+      : remote.failed === 'taken' ? 'taken'
+      : remote.failed || peer?.destroyed || peer?.disconnected ? 'offline'
+      : 'starting';
+    const box = $('remote-status');
+    box.dataset.state = state;
+    box.textContent = REMOTE_STATES[state];
+    $('remote-qr-btn').disabled = state === 'nolib';
+    $('remote-qr-btn').textContent = $('remote-qr').hidden ? 'iPhoneとつなぐ（QRを出す）' : 'QRを隠す';
+    if (deck.active) renderSlidesHint();
+  }
+
+  function renderRemoteQr() {
+    const url = remoteUrl();
+    if (remote.qrFor === url) return;
+    const qr = qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    $('remote-qr-code').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 8, scalable: true });
+    $('remote-url').textContent = url;
+    remote.qrFor = url;
+  }
+  $('remote-qr-btn').addEventListener('click', () => {
+    if ($('remote-qr').hidden) renderRemoteQr();
+    $('remote-qr').hidden = !$('remote-qr').hidden;
+    updateRemoteUi();
+  });
+  $('remote-renew').addEventListener('click', () => {
+    if (!confirm('QRを作り直します。それまでのQRで開いたページ（つないでいるiPhoneも）は使えなくなるので、iPhoneで新しいQRを読み取り直してください。よろしいですか？')) return;
+    remoteId = newRemoteId();
+    store.set(REMOTE_ID_KEY, remoteId);
+    remote.conn?.close();
+    remote.conn = null;
+    startHost();
+    renderRemoteQr();
+  });
+
+  // 見回り：中継サービスとのつながりが切れていたら、つなぎ直す（会場の通信が一時的に切れても、戻れば自動でつながる）。
+  // iPhoneから長く何も届かなければ、切れたとみなす
+  setInterval(() => {
+    if (!window.Peer) return;
+    const peer = remote.peer;
+    if (!peer || peer.destroyed) startHost();
+    else if (peer.disconnected) {
+      try { peer.reconnect(); } catch (e) { /* 次の見回りで、もう一度 */ }
+    }
+    if (remote.conn && performance.now() - remote.lastSeen > REMOTE_TIMEOUT_MS) {
+      const conn = remote.conn;
+      remote.conn = null;
+      conn.close();
+    }
+    updateRemoteUi();
+  }, 2500);
+
   // ===== ファイルの受け取り =====
-  const isAudioFile = (f) => f.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg)$/i.test(f.name);
+  const isAudioFile =(f) => f.type.startsWith('audio/') || /\.(mp3|m4a|aac|wav|ogg)$/i.test(f.name);
   const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes('Files');
   function takeFile(file) {
     if (!file) return;
     if (isAudioFile(file)) {
       if (source) setMusic(file);
       else showError('先にCSVを読み込んでください。音楽は次の画面で選べます。');
+    } else if (/\.md$/i.test(file.name)) {
+      loadScriptFile(file);   // プレゼンの原稿
     } else {
       loadCsvFile(file);
     }
@@ -1668,10 +2203,11 @@
     }
   });
   $('play-btn').addEventListener('click', () => play(null));
+  $('slides-btn').addEventListener('click', () => startSlides(0));
 
   // CSVや音楽ファイルを、画面のどこに落としても読み込む
   document.addEventListener('dragover', (e) => {
-    if (dragId || !hasFiles(e) || run.active) return;
+    if (dragId || !hasFiles(e) || run.active || deck.active) return;
     e.preventDefault();
     $('drop').classList.add('is-over');
   });
@@ -1680,12 +2216,15 @@
   });
   document.addEventListener('drop', (e) => {
     $('drop').classList.remove('is-over');
-    if (dragId || !hasFiles(e) || run.active) return;
+    if (dragId || !hasFiles(e) || run.active || deck.active) return;
     e.preventDefault();
     takeFile(e.dataTransfer.files[0]);
   });
 
   initSettingsForm();
+  buildDeck();
+  renderScriptInfo();
+  startHost();
   renderLastButton();
   renderMusicMode();
   document.fonts.ready.then(scheduleEstimate);  // 字体が届いたら、長さの目安を計算し直す

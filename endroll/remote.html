@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1730">
+<meta name="robots" content="noindex">
+<title>プレゼンのリモコン</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<style>
+  /* エンドロールの前のプレゼンを、iPhoneで原稿を見ながら送るためのページ。Macのエンドロールのページの「iPhoneとつなぐ」のQRから開く */
+  :root {
+    --navy: #0a1730;
+    --navy-2: #11214a;
+    --gold: #d9b45a;
+    --gold-soft: #e8cf92;
+    --gold-line: rgba(217, 180, 90, 0.35);
+    --gold-faint: rgba(217, 180, 90, 0.18);
+    --text: #f3f1ea;
+    --text-sub: #b9c3d6;
+    --muted: #7d89a3;
+    --danger: #e8907f;
+    --ok: #8fd1a4;
+    --warn: #f2b25c;
+    --gothic: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    --size: 19px;   /* 原稿の文字の大きさ（A− ／ A+ で変える） */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--gothic);
+    font-weight: 500;
+    line-height: 1.6;
+    -webkit-text-size-adjust: 100%;
+  }
+  button { font: inherit; color: inherit; touch-action: manipulation; cursor: pointer; }
+
+  /* 上：つながり・いまのスライド */
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: calc(env(safe-area-inset-top) + 8px) 14px 10px;
+    background: var(--navy);
+    border-bottom: 1px solid var(--gold-line);
+  }
+  .status-row { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+  .status { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-size: 13px; color: var(--text-sub); line-height: 1.4; }
+  .status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); flex: none; }
+  .status[data-state="ok"]::before { background: var(--ok); }
+  .status[data-state="error"]::before { background: var(--danger); }
+  .size-btns { display: flex; gap: 6px; flex: none; }
+  .size-btns button { width: 40px; height: 30px; border-radius: 6px; border: 1px solid var(--gold-line); background: transparent; font-size: 13px; }
+  .now { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .thumb {
+    width: 112px;
+    aspect-ratio: 16 / 9;
+    flex: none;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 4px;
+    border: 1px solid var(--gold-faint);
+    border-radius: 6px;
+    background: #050b1a;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+  .thumb img { display: block; width: calc(100% + 8px); height: calc(100% + 8px); margin: -4px; object-fit: cover; }
+  .thumb small { display: block; font-size: 9px; font-weight: 500; color: var(--text-sub); }
+  .now-text { min-width: 0; }
+  .now-num { font-size: 12px; color: var(--gold); letter-spacing: 0.05em; }
+  .now-title { font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+  .notice { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--warn); white-space: pre-line; }
+
+  /* 原稿 */
+  .script { padding: 14px 16px calc(130px + env(safe-area-inset-bottom)); font-size: var(--size); line-height: 1.85; }
+  .script-note { font-size: 13px; color: var(--warn); margin-bottom: 12px; }
+  .part {
+    padding: 8px 0 8px 12px;
+    margin-bottom: 10px;
+    border-left: 3px solid transparent;
+    color: var(--muted);
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .part.is-current { color: var(--text); border-left-color: var(--gold); }
+  .part-head { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 4px; }
+  .part.is-current .part-head { color: var(--gold); }
+  .part p { margin-bottom: 0.9em; }
+  .part p:last-child { margin-bottom: 0; }
+  .direction { font-size: 0.8em; color: var(--gold-soft); }
+  .empty { color: var(--text-sub); font-size: 15px; line-height: 1.8; }
+
+  /* 下：次へ・戻る（親指で押しやすいように、画面の下に置く） */
+  .bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);   /* 下の小さな文字が長くても、ボタンの幅を変えない */
+    gap: 10px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: var(--navy);
+    border-top: 1px solid var(--gold-line);
+  }
+  .bottom button { min-width: 0; min-height: 68px; border-radius: 12px; font-size: 18px; font-weight: 700; line-height: 1.3; padding: 6px 8px; }
+  .prev { background: transparent; border: 1px solid var(--gold-line); }
+  .next { background: var(--gold); border: 0; color: var(--navy); }
+  .next small, .prev small { display: block; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bottom button:active:not(:disabled) { transform: scale(0.97); }
+  .bottom button:disabled { opacity: 0.3; cursor: default; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="status-row">
+    <p class="status" id="status" role="status"></p>
+    <div class="size-btns">
+      <button id="size-down" aria-label="原稿の文字を小さく">A−</button>
+      <button id="size-up" aria-label="原稿の文字を大きく">A+</button>
+    </div>
+  </div>
+  <div class="now">
+    <div class="thumb" id="thumb"></div>
+    <div class="now-text">
+      <p class="now-num" id="now-num"></p>
+      <p class="now-title" id="now-title"></p>
+    </div>
+  </div>
+  <p class="notice" id="notice" hidden></p>
+  <p class="notice" id="wake-notice" hidden>画面が自動で消えるのを、まだ止められていません。画面をさわると、もう一度試します。それでもこの表示が消えないときは、話している間に画面が消えないよう、設定 → 画面表示と明るさ → 自動ロック → なし にしてください。</p>
+</header>
+
+<main class="script" id="script"></main>
+
+<nav class="bottom">
+  <button class="prev" id="prev-btn">◀ 戻る<small id="prev-sub"></small></button>
+  <button class="next" id="next-btn">次へ ▶<small id="next-sub"></small></button>
+</nav>
+
+<!-- Macとつなぐ中継サービス（PeerJS）の部品 -->
+<script src="vendor/peerjs.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  const store = {
+    get(key, fallback) {
+      try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* 覚えられなくても、その場では使える */ }
+    },
+  };
+
+  // つなぐ先（Macのページの待ち受けの名前）。QRのURLの # の後ろに入っている
+  const hostId = decodeURIComponent(location.hash.slice(1));
+  const PING_MS = 2000;           // 2秒ごとに、Macに「いますか」と送る
+  const TIMEOUT_MS = 6000;        // Macから6秒なにも届かなければ、つなぎ直す
+  const TAP_GUARD_MS = 400;       // 続けて2回押してしまっても、1回分だけ送る
+
+  // Macから届いたもの
+  const view = { slides: [], script: null, mode: 'preview', index: 0, canBack: false, gotHello: false };
+  let shownKey = '';   // いま強調している原稿の区切り（変わったときだけ、そこまで原稿を動かす）
+
+  // ===== 文字の大きさ =====
+  const SIZES = [15, 17, 19, 22, 26];
+  let size = store.get('endroll-remote-size', 19);
+  function applySize() {
+    document.documentElement.style.setProperty('--size', `${size}px`);
+    $('size-down').disabled = size <= SIZES[0];
+    $('size-up').disabled = size >= SIZES[SIZES.length - 1];
+  }
+  function changeSize(step) {
+    const i = Math.max(0, Math.min(SIZES.length - 1, SIZES.indexOf(size) + step));
+    size = SIZES[i] ?? 19;
+    store.set('endroll-remote-size', size);
+    applySize();
+    scrollToCurrent(false);
+  }
+  $('size-down').addEventListener('click', () => changeSize(-1));
+  $('size-up').addEventListener('click', () => changeSize(1));
+
+  // ===== 表示 =====
+  let connected = false;
+  function setStatus(state, text) {
+    $('status').dataset.state = state;
+    $('status').textContent = text;
+  }
+
+  const slideTitle = (s) => (s ? s.text || s.label : '');
+  const shortTitle = (s) => slideTitle(s).replace(/（.*）$/, '');   // ボタンの下には「表紙の絵」のように短く出す
+
+  function renderThumb() {
+    const thumb = $('thumb');
+    thumb.replaceChildren();
+    if (view.mode === 'roll') { thumb.textContent = 'エンドロール'; return; }
+    if (view.mode !== 'slides') { thumb.textContent = '始まる前'; return; }
+    const s = view.slides[view.index];
+    if (!s) return;
+    if (s.image) {
+      const img = el('img');
+      img.src = s.image;
+      img.alt = s.label;
+      thumb.append(img);
+    } else {
+      thumb.append(s.text);
+      if (s.sub) thumb.append(el('small', '', s.sub));
+    }
+  }
+
+  function renderScript() {
+    const box = $('script');
+    box.replaceChildren();
+    shownKey = '';
+    const sc = view.script;
+    if (!view.gotHello) return;
+    if (!sc) {
+      box.append(el('p', 'empty', '原稿がまだありません。Macのエンドロールのページの「iPhoneで原稿を見ながら送る」で、原稿ファイル（presentation-script.md）を選んでください。選ぶと、ここに出ます。'));
+      return;
+    }
+    if (!sc.synced) box.append(el('p', 'script-note', '原稿の中にスライドの切り替え位置が見つからないので、全文だけを出しています（スライドに合わせて動きません）。'));
+    sc.parts.forEach((part) => {
+      const sec = el('section', 'part');
+      sec.dataset.key = String(part.index);
+      if (part.index === 'roll') sec.append(el('p', 'part-head', 'エンドロール'));
+      else if (part.index != null) sec.append(el('p', 'part-head', `${part.index + 1}　${slideTitle(view.slides[part.index])}`));
+      part.paras.forEach((lines) => {
+        const p = el('p');
+        lines.forEach((line, i) => {
+          if (i) p.append(el('br'));
+          // 「（エンドロール開始）」のような、話さない指示は小さく出す
+          if (/^[（(].*[）)]$/.test(line)) p.append(el('span', 'direction', line));
+          else p.append(line);
+        });
+        sec.append(p);
+      });
+      box.append(sec);
+    });
+  }
+
+  // いまの場面の原稿を、画面の上のほう（いまのスライドの見本のすぐ下）に持ってくる
+  function scrollToCurrent(smooth) {
+    const cur = document.querySelector('.part.is-current');
+    if (!cur) return;
+    const top = cur.getBoundingClientRect().top + window.scrollY - document.querySelector('.top').offsetHeight - 8;
+    window.scrollTo({ top: Math.max(0, top), behavior: smooth ? 'smooth' : 'auto' });
+  }
+
+  function render() {
+    const total = view.slides.length;
+    const ready = connected && view.gotHello;
+    // いまのスライド
+    if (!ready) {
+      $('now-num').textContent = '';
+      $('now-title').textContent = '';
+    } else if (view.mode === 'slides') {
+      $('now-num').textContent = `スライド ${view.index + 1}／${total}`;
+      $('now-title').textContent = slideTitle(view.slides[view.index]);
+    } else if (view.mode === 'roll') {
+      $('now-num').textContent = 'エンドロール';
+      $('now-title').textContent = '流れています';
+    } else {
+      $('now-num').textContent = 'まだ始まっていません';
+      $('now-title').textContent = '';
+    }
+    renderThumb();
+    const notice = $('notice');
+    notice.hidden = !(ready && view.mode === 'preview');
+    notice.textContent = 'Macで「▶ プレゼンから始める」を押すと始まります。始まったら、ここで送れます。';
+
+    // 原稿の強調
+    const key = !ready ? '' : view.mode === 'slides' ? String(view.index) : view.mode === 'roll' ? 'roll' : '';
+    document.querySelectorAll('.part').forEach((sec) => sec.classList.toggle('is-current', sec.dataset.key === key));
+    if (key && key !== shownKey) {
+      shownKey = key;
+      scrollToCurrent(true);
+    }
+
+    // ボタン
+    const prev = $('prev-btn');
+    const next = $('next-btn');
+    if (view.mode === 'roll') {
+      prev.disabled = !ready || !view.canBack;
+      $('prev-sub').textContent = view.canBack ? '最後のスライドへ' : '';
+      next.disabled = true;
+      $('next-sub').textContent = '';
+    } else {
+      prev.disabled = !ready || view.mode !== 'slides' || view.index === 0;
+      $('prev-sub').textContent = ready && view.mode === 'slides' && view.index > 0 ? `${view.index}　${shortTitle(view.slides[view.index - 1])}` : '';
+      next.disabled = !ready || view.mode !== 'slides';
+      $('next-sub').textContent = !ready || view.mode !== 'slides' ? ''
+        : view.index >= total - 1 ? 'エンドロール開始' : `${view.index + 2}　${shortTitle(view.slides[view.index + 1])}`;
+    }
+  }
+
+  // ===== Macとのつながり =====
+  let peer = null;
+  let conn = null;
+  let lastSeen = 0;
+  let restartTimer = 0;
+  let busy = false;
+
+  function send(msg) {
+    if (!conn?.open) return;
+    try { conn.send(msg); } catch (e) { /* 切れていたら、見回りで気づく */ }
+  }
+
+  function teardown() {
+    connected = false;
+    const p = peer;
+    conn = null;
+    peer = null;
+    try { p?.destroy(); } catch (e) { /* もう閉じている */ }
+  }
+
+  function restartLater(ms) {
+    clearTimeout(restartTimer);
+    restartTimer = setTimeout(start, ms);
+  }
+
+  function start() {
+    clearTimeout(restartTimer);
+    if (!hostId) {
+      setStatus('error', 'つなぐ先が分かりません。Macのページの「iPhoneとつなぐ」のQRを、カメラで読み取って開いてください。');
+      return;
+    }
+    if (!window.Peer) {
+      setStatus('error', '中継サービスの部品を読み込めませんでした。通信を確かめて、ページを開き直してください。');
+      return;
+    }
+    teardown();
+    render();
+    if (!busy) setStatus('wait', '中継サービスにつないでいます…');
+    const p = new Peer({ debug: 0 });
+    peer = p;
+    p.on('open', () => {
+      if (peer !== p) return;
+      if (!busy) setStatus('wait', 'Macにつないでいます…');
+      connect(p);
+    });
+    p.on('error', (err) => {
+      if (peer !== p) return;
+      if (err.type === 'peer-unavailable') {
+        setStatus('error', 'Macが見つかりません。Macでエンドロールのページを開いてください（自動でつなぎ直します）。');
+      } else {
+        setStatus('error', '中継サービスにつながりません。通信を確かめてください（自動でつなぎ直します）。');
+      }
+      restartLater(3000);
+    });
+  }
+
+  function connect(p) {
+    const c = p.connect(hostId, { serialization: 'json', reliable: true });
+    conn = c;
+    // 10秒たってもつながらなければ、最初からやり直す
+    const openTimer = setTimeout(() => { if (conn === c && !c.open) restartLater(0); }, 10000);
+    c.on('open', () => {
+      clearTimeout(openTimer);
+      if (conn !== c) return;
+      connected = true;
+      busy = false;
+      lastSeen = Date.now();
+      setStatus('ok', 'Macとつながっています');
+      send({ type: 'ping' });
+      render();
+    });
+    c.on('data', (msg) => {
+      if (conn !== c || !msg || typeof msg !== 'object') return;
+      lastSeen = Date.now();
+      if (msg.type === 'hello') {
+        view.slides = Array.isArray(msg.slides) ? msg.slides : [];
+        view.script = msg.script || null;
+        view.gotHello = true;
+        renderScript();
+      } else if (msg.type === 'state') {
+        view.mode = msg.mode;
+        view.index = msg.index;
+        view.canBack = !!msg.canBack;
+      } else if (msg.type === 'busy') {
+        // 先にほかの端末がつながっている
+        busy = true;
+        connected = false;
+        setStatus('error', 'ほかの端末がMacにつながっています。その端末を閉じるか、Macで「QRを作り直す」を押してから読み取り直してください（自動でつなぎ直します）。');
+      }
+      render();
+    });
+    const lost = () => {
+      if (conn !== c) return;
+      clearTimeout(openTimer);
+      connected = false;
+      if (!busy) setStatus('error', 'Macとのつながりが切れました。つなぎ直しています…');
+      render();
+      restartLater(busy ? 5000 : 1500);
+    };
+    c.on('close', lost);
+    c.on('error', lost);
+  }
+
+  // 見回り：Macに「いますか」と送る。返事がなければ、つなぎ直す
+  setInterval(() => {
+    if (!conn?.open) return;
+    send({ type: 'ping' });
+    if (Date.now() - lastSeen > TIMEOUT_MS) {
+      connected = false;
+      setStatus('error', 'Macからの返事がありません。つなぎ直しています…');
+      render();
+      restartLater(0);
+    }
+  }, PING_MS);
+
+  // 次へ・戻る。Macが動いたら、Macから届く場面で画面を直す
+  let lastTap = 0;
+  function go(dir) {
+    const now = Date.now();
+    if (now - lastTap < TAP_GUARD_MS) return;
+    lastTap = now;
+    send({ type: 'go', dir });
+  }
+  $('next-btn').addEventListener('click', () => go('next'));
+  $('prev-btn').addEventListener('click', () => go('prev'));
+
+  // ===== 画面を消さない（Wake Lock：画面のスリープを止めるブラウザの機能。LT会タイマーと同じ） =====
+  // 別のアプリに切り替えると止めた状態は外れるので、戻ったときと、画面をさわったときに、もう一度止める
+  // 止められなかったときだけ、自動ロックをオフにする手順を出す
+  let wakeLock = null;
+  let wakeTrying = false;
+  async function requestWake() {
+    if (!('wakeLock' in navigator)) { $('wake-notice').hidden = false; return; }
+    if (wakeLock || wakeTrying || document.hidden) return;
+    wakeTrying = true;
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+      $('wake-notice').hidden = true;
+    } catch (e) {
+      // 一部のブラウザは、画面をさわった後でないと止められない。次にさわったときに、もう一度試す
+      $('wake-notice').hidden = false;
+    } finally {
+      wakeTrying = false;
+    }
+  }
+  document.addEventListener('pointerdown', () => { if (!wakeLock) requestWake(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    requestWake();
+    // iPhoneが眠っていた間に切れていたら、すぐつなぎ直す
+    if (conn?.open) send({ type: 'ping' });
+    else restartLater(0);
+  });
+
+  applySize();
+  render();
+  requestWake();
+  start();
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* 保存できなくても、通信できれば動く */ });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,18 +1,22 @@
 // エンドロールを、通信なしでも開けるようにする仕組み（Service Worker：ページを端末に保存しておく仕組み）
-// - ページとダミーのCSV：通信できるときは最新を取り、取れない・遅いときは保存しておいたものを出す
+// - ページ（エンドロールと、iPhoneのリモコン）・ダミーのCSV・プレゼンの絵とQRコード・部品（PeerJS など）：
+//   通信できるときは最新を取り、取れない・遅いときは保存しておいたものを出す
 // - 字体（Google Fonts）：一度取ったものを保存して使う。取れなくても、PCの字体で表示されるだけで動く
-// - 読み込んだCSVと音楽ファイルは、ここでは扱わない（PCの中で読むだけで、通信しないため）
+// - 読み込んだCSV・音楽ファイル・原稿は、ここでは扱わない（PCの中で読むだけで、通信しないため）
 
 const CACHE = 'endroll-v1';
 const PAGE = './';
+const REMOTE = './remote.html';   // iPhoneのリモコン
 const SAMPLE = './sample.csv';
+const IMAGES = ['./images/lodge-cover.jpg', './images/lodge-hut.jpg', './images/lodge-qr.png'];  // プレゼンのスライド
+const VENDOR = ['./vendor/peerjs.min.js', './vendor/qrcode.js'];  // iPhoneとつなぐ部品
 const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap';
 const NETWORK_TIMEOUT_MS = 3000;  // 会場の通信が遅いときは、3秒待って保存しておいたページを出す
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await cache.addAll([PAGE, SAMPLE]);
+    await cache.addAll([PAGE, REMOTE, SAMPLE, ...IMAGES, ...VENDOR]);
     try {
       await cache.add(FONT_CSS);
     } catch (e) { /* 字体の指定が取れなくても、ページは保存できているので続ける */ }
@@ -35,7 +39,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (req.mode === 'navigate') {
-    event.respondWith(networkFirst(req, PAGE));
+    // ページごとに分けて保存する（リモコンのページを開いても、エンドロールのページの保存分が入れ替わらないように）
+    event.respondWith(networkFirst(req, url.pathname.endsWith('/remote.html') ? REMOTE : PAGE));
   } else if (url.origin === self.location.origin) {
     event.respondWith(networkFirst(req, req));
   } else if (url.origin === 'https://fonts.gstatic.com') {

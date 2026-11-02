@@ -121,8 +121,6 @@
   .side input:focus, .side textarea:focus, .side select:focus { outline: none; border-color: var(--gold); }
   .check, .radio { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 8px; cursor: pointer; }
   .check input, .radio input { width: 17px; height: 17px; accent-color: var(--gold); flex: none; }
-  .radio input[type="text"] { width: 5.5em; flex: none; padding: 4px 8px; }
-  .radio.is-disabled { color: var(--muted); cursor: default; }
   .inline-field { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 10px; }
   .side .inline-field input[type="text"] { width: 4.5em; flex: none; padding: 4px 8px; }
   .hint-text { font-size: 12px; color: var(--muted); line-height: 1.7; margin-top: 8px; white-space: pre-line; }
@@ -144,11 +142,6 @@
   .check-lines b { color: var(--text); font-weight: 700; }
   .check-lines.fix { color: var(--warn); }
   .check-lines.fix b { color: var(--warn); }
-  .check-sub { font-size: 12px; color: var(--gold); margin-top: 12px; }
-  .plan-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 13px; color: var(--text-sub); }
-  .plan-table td { padding: 5px 4px; border-top: 1px solid rgba(185, 195, 214, 0.12); }
-  .plan-table tr.is-current td { background: rgba(217, 180, 90, 0.08); }
-  .plan-time { color: var(--text); font-variant-numeric: tabular-nums; }
   .bar-verdict { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-sub); }
   .bar-verdict .level { font-size: 14px; }
 
@@ -442,11 +435,11 @@
       </section>
 
       <section class="panel">
-        <h2>長さ</h2>
-        <label class="radio"><input type="radio" name="dmode" value="time">時間を決める<input type="text" id="duration" inputmode="numeric" aria-label="流す長さ（分:秒）"></label>
-        <label class="radio" id="dmode-music-label"><input type="radio" name="dmode" value="music">音楽の長さに合わせる</label>
-        <p class="hint-text">「音楽の長さに合わせる」は、曲が終わる10秒前に KEEP DRIVEN が止まります。</p>
+        <h2>速さと長さ</h2>
+        <label class="inline-field">文字が画面の下から上まで<input type="text" id="cross-sec" inputmode="decimal" aria-label="文字が画面の下から上まで動く秒数">秒で動く</label>
+        <p class="hint-text">速さは最初から最後まで同じです。長さは、流す投稿の量で決まります。秒数を増やすとゆっくりになり、そのぶん長くなります。音楽は1回だけ流します（ループしません）。</p>
         <p class="estimate" id="estimate"></p>
+        <div class="btn-row" style="margin-top:8px"><button class="btn" id="fit-btn" hidden></button></div>
       </section>
 
       <section class="panel">
@@ -466,7 +459,7 @@
         <textarea id="staff" rows="9" aria-label="幹事の名前"></textarea>
         <p class="hint-text">1行に1人。この順番で流れます。</p>
         <label class="inline-field">1人あたり<input type="text" id="staff-sec" inputmode="decimal" aria-label="幹事の名前1人あたりの秒数">秒ずつ流す</label>
-        <p class="hint-text">名前を1人ずつ読み上げられるよう、名前どうしの間を空けて、この秒数ごとに次の人が画面の真ん中を通るようにします。流れる速さは最初から最後まで同じです。全体の長さは変わらないので、そのぶん投稿が少し速くなります。</p>
+        <p class="hint-text">名前を1人ずつ読み上げられるよう、名前どうしの間を空けて、この秒数ごとに次の人が画面の真ん中を通るようにします。流れる速さは最初から最後まで同じで、秒数を増やすと、そのぶん全体が長くなります。</p>
       </section>
 
       <section class="panel">
@@ -521,16 +514,17 @@
   const STAFF_HEADING = '幹事';
   const OTHER_THEME = 'その他';   // テーマの#タグがない投稿の見出し
   const LONG_CHARS = 200;         // これより長い投稿に印を付ける
-  const MUSIC_TAIL_SEC = 10;      // 「音楽の長さに合わせる」とき、KEEP DRIVEN を見せる余韻の秒数
-  const MIN_SEC = 30;
+  const CROSS_SEC_RANGE = [8, 90];   // 「文字が画面の下から上まで動く秒数」に入れられる範囲
+  const MUSIC_TAIL_SEC = 10;         // 曲に収めるとき、KEEP DRIVEN が止まってから曲が終わるまで残す秒数（余韻）
   const STAFF_SEC_RANGE = [1, 15];   // 幹事の名前の「1人あたりの秒数」に入れられる範囲
-  const STAFF_MAX_SHARE = 0.6;       // 幹事の名前に使うのは、全体の長さの6割まで（投稿が速くなりすぎないように）
   const DEFAULTS = {
     title: 'ADS卒業パーティー in TOKYO',
     subtitle: '2026.10.31',
     showNames: true,
-    durationMode: 'time',
-    durationSec: 180,
+    // 文字が画面の下から上まで動く秒数（速さ）。速さは固定する（10/30 RYO決定）。初期値は、10/30時点のCSV（43件、1件平均62字）の
+    // 全件が曲（終わりなき旅、約7分9秒）に、止まってから10秒以上残して収まる秒数（10/30 RYO決定：全件を曲に収めるのを優先）。
+    // 16:9（1920×1080）でも、MacBookの形（1512×982）でも収まるようにした。当日は最新のCSVで、プレビューの「◯秒にする」で直す
+    crossSec: 19,
     staffSec: 4,   // 幹事の名前を1人ずつ読み上げてアピールするため、1人あたりこの秒数の間隔で流す（10/29 RYO依頼）
     slideTheme: 'navy',   // プレゼンの文字のスライドの色。navy（ネイビー×ゴールド）か lodge（ロッジ色）。10/29 RYO
     // 幹事13名。Slackの表示名どおり（表示名が空の人は、Slackに出る氏名欄の名前）。10/25確認
@@ -1211,8 +1205,7 @@
     $('show-names').checked = settings.showNames;
     $('staff').value = settings.staff;
     $('staff-sec').value = String(settings.staffSec);
-    $('duration').value = fmtTime(settings.durationSec);
-    document.querySelector(`input[name="dmode"][value="${settings.durationMode}"]`).checked = true;
+    $('cross-sec').value = String(settings.crossSec);
     (document.querySelector(`input[name="slide-theme"][value="${settings.slideTheme}"]`)
       || document.querySelector('input[name="slide-theme"]')).checked = true;
   }
@@ -1225,8 +1218,9 @@
   $('show-names').addEventListener('change', (e) => { settings.showNames = e.target.checked; saveSettings(); renderPreview(); });
   $('staff').addEventListener('input', (e) => { settings.staff = e.target.value; saveSettings(); renderPreview(); });
   // 「4」「3.5」の形で受け付ける（全角の数字も読む）
+  const toNumber = (text) => Number(text.trim().replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)));
   $('staff-sec').addEventListener('change', (e) => {
-    const value = Number(e.target.value.trim().replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)));
+    const value = toNumber(e.target.value);
     if (e.target.value.trim() !== '' && Number.isFinite(value)) {
       settings.staffSec = Math.min(STAFF_SEC_RANGE[1], Math.max(STAFF_SEC_RANGE[0], Math.round(value * 2) / 2));
     }
@@ -1234,24 +1228,18 @@
     saveSettings();
     scheduleEstimate();
   });
-  document.querySelectorAll('input[name="dmode"]').forEach((r) => r.addEventListener('change', (e) => {
-    settings.durationMode = e.target.value;
-    saveSettings();
-    scheduleEstimate();
-  }));
-  // 「3:00」「3」（分）「2:45」の形で受け付ける
-  $('duration').addEventListener('change', (e) => {
-    const m = e.target.value.trim().replace('：', ':').match(/^(\d+)(?::(\d{1,2}))?$/);
-    if (m) settings.durationSec = Math.max(MIN_SEC, Number(m[1]) * 60 + Number(m[2] || 0));
-    e.target.value = fmtTime(settings.durationSec);
-    settings.durationMode = 'time';
-    document.querySelector('input[name="dmode"][value="time"]').checked = true;
+  $('fit-btn').addEventListener('click', (e) => {
+    settings.crossSec = Number(e.currentTarget.dataset.value);
+    $('cross-sec').value = String(settings.crossSec);
     saveSettings();
     scheduleEstimate();
   });
-  $('duration').addEventListener('focus', () => {
-    settings.durationMode = 'time';
-    document.querySelector('input[name="dmode"][value="time"]').checked = true;
+  $('cross-sec').addEventListener('change', (e) => {
+    const value = toNumber(e.target.value);
+    if (e.target.value.trim() !== '' && Number.isFinite(value)) {
+      settings.crossSec = Math.min(CROSS_SEC_RANGE[1], Math.max(CROSS_SEC_RANGE[0], Math.round(value * 2) / 2));
+    }
+    e.target.value = String(settings.crossSec);
     saveSettings();
     scheduleEstimate();
   });
@@ -1301,7 +1289,6 @@
   audio.addEventListener('loadedmetadata', () => {
     $('music-info').textContent = `${musicName}（${fmtTime(audio.duration)}）`;
     $('music-test').hidden = false;
-    renderMusicMode();
     scheduleEstimate();
   });
   audio.addEventListener('error', () => {
@@ -1310,7 +1297,6 @@
     $('music-info').classList.add('warn');
     $('music-test').hidden = true;
     musicUrl = null;
-    renderMusicMode();
     scheduleEstimate();
   });
   audio.addEventListener('play', () => { $('music-test').textContent = '止める'; });
@@ -1327,14 +1313,8 @@
       audio.pause();
     }
   });
-  function renderMusicMode() {
-    $('dmode-music-label').classList.toggle('is-disabled', !hasMusic());
-  }
 
-  // ===== 長さ =====
-  const musicMode = () => settings.durationMode === 'music' && hasMusic();
-  const totalSec = () => (musicMode() ? Math.max(MIN_SEC, audio.duration - MUSIC_TAIL_SEC) : settings.durationSec);
-
+  // ===== 上映画面の中身 =====
   function buildRoll(roll) {
     const frag = document.createDocumentFragment();
     if (settings.title || settings.subtitle) {
@@ -1386,16 +1366,15 @@
     return { height, startY, endY, distance: startY - endY };
   }
 
-  // 幹事の名前どうしの間を、1人あたり settings.staffSec 秒になるように空ける幅を出す
-  // 速さは最初から最後まで一定（速さ v = 距離 ÷ 長さ T）なので、名前の間隔は P = 秒数 s × v。
-  // 間を g 空けると距離も（人数−1）× g 増えるので、P = h + g と P = s ×（D0 +（人数−1）× g）÷ T から g を出す
-  // （h：間を空けないときの名前の間隔、D0：間を空けないときの距離）
-  // distance を渡すと、投稿を減らしたときの距離で計算する（読みやすさの確認で使う）
-  function staffGap(base, total, distance = base.distance) {
-    if (base.n < 2) return 0;
-    const sec = Math.min(settings.staffSec, (total * STAFF_MAX_SHARE) / (base.n - 1));
-    return Math.max(0, (sec * distance - base.h * total) / (total - sec * (base.n - 1)));
-  }
+  // ===== 速さと長さ =====
+  // 速さは最初から最後まで同じで、「文字が画面の下から上まで動く秒数」（settings.crossSec）で決める。
+  // 長さは、流す量（投稿・幹事の名前）で決まる（10/30 RYO決定。それまでは長さを決めて、速さを合わせていた）。
+  // 速さは画面の高さに対する割合なので、どのPC・プロジェクターでも同じ見え方の速さになる
+  const speedOf = (height) => height / settings.crossSec;   // 1秒に動く距離
+
+  // 幹事の名前を、1人あたり settings.staffSec 秒ずつ流すために、名前どうしの間を空ける幅
+  // （名前の間隔 = 秒数 × 速さ。h は、間を空けないときの名前の間隔）
+  const staffGap = (base) => (base.n < 2 ? 0 : Math.max(0, settings.staffSec * speedOf(base.height) - base.h));
 
   // 名前の間を空けないときの距離・名前の間隔と、投稿の部分の高さを測る
   function measureBase(stage, roll) {
@@ -1412,13 +1391,32 @@
     };
   }
 
-  // 名前の間を空けてから、流れる位置を計算する
-  function layoutRoll(stage, roll, total) {
+  // 秒数 c のときの長さ。速さ v = 画面の高さ ÷ c、距離 =（名前の間を空けないときの距離）+（人数−1）×（名前の間）
+  // c を増やすと長さも増える
+  function lengthAt(base, c) {
+    const v = base.height / c;
+    return (base.distance + Math.max(0, base.n - 1) * Math.max(0, settings.staffSec * v - base.h)) / v;
+  }
+  // 長さが target 秒以内に収まる、いちばんゆっくりな秒数（0.5秒きざみで切り捨て）。いちばん速くしても収まらなければ null
+  function slowestWithin(base, target) {
+    let [lo, hi] = CROSS_SEC_RANGE;
+    if (lengthAt(base, lo) > target) return null;
+    if (lengthAt(base, hi) <= target) return hi;
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (lengthAt(base, mid) <= target) lo = mid; else hi = mid;
+    }
+    return Math.floor(lo * 2) / 2;
+  }
+
+  // 名前の間を空けてから、流れる位置と長さを計算する
+  function layoutRoll(stage, roll) {
     const base = measureBase(stage, roll);
-    const gap = staffGap(base, total);
+    const gap = staffGap(base);
     roll.style.setProperty('--staff-gap', `${gap.toFixed(2)}px`);
     const geo = geometry(stage, roll);
-    return { ...geo, base, staffSec: base.n >= 2 ? ((base.h + gap) * total) / geo.distance : 0 };
+    const speed = speedOf(geo.height);
+    return { ...geo, base, speed, total: geo.distance / speed, staffSec: base.n >= 2 ? (base.h + gap) / speed : 0 };
   }
 
   let estimateTimer = 0;
@@ -1426,7 +1424,7 @@
     clearTimeout(estimateTimer);
     estimateTimer = setTimeout(renderEstimate, 150);
   }
-  // このPCの画面の大きさで見えない上映画面を作り、幹事の名前の秒数と、読みやすさを出す
+  // このPCの画面の大きさで見えない上映画面を作り、長さ・幹事の名前の秒数・音楽との兼ね合い・読みやすさを出す
   function renderEstimate() {
     if (!source) return;
     const measure = $('measure');
@@ -1434,21 +1432,41 @@
     measure.style.height = `${screen.height}px`;
     const roll = measure.firstElementChild;
     buildRoll(roll);
-    const total = totalSec();
-    const geo = layoutRoll(measure, roll, total);
-    const lines = [`流れる長さ：${fmtTime(total)}${musicMode() ? '（音楽に合わせる）' : ''}`];
+    const geo = layoutRoll(measure, roll);
+    const lines = [`流れる長さ：約${fmtTime(geo.total)}`];
     const staffCount = staffNames().length;
     if (staffCount >= 2) {
       lines.push(`幹事の名前：1人 約${Math.round(geo.staffSec * 10) / 10}秒ずつ（${staffCount}人で約${Math.round(geo.staffSec * staffCount)}秒）`);
     }
-    if (settings.durationMode === 'music' && !hasMusic()) lines.unshift('音楽が選ばれていないので、決めた時間で流します。');
+    // 音楽は1回だけ流す（ループしない。10/30 RYO決定）。曲より長いと、最後は音楽がなくなる
+    let over = false;
+    let fit = null;
+    if (hasMusic()) {
+      // 当日に秒数を直しやすいよう、曲に収まる（止まってから曲の終わりまで余韻を残す）いちばんゆっくりな秒数を出す
+      fit = slowestWithin(geo.base, audio.duration - MUSIC_TAIL_SEC);
+      lines.push(fit == null
+        ? 'いちばん速くしても曲に収まりません。投稿を対象外にしてください。'
+        : `曲に収まるいちばんゆっくりな秒数：${fit}秒（KEEP DRIVEN が止まってから、曲の終わりまで${MUSIC_TAIL_SEC}秒残る）`);
+      const rest = audio.duration - geo.total;
+      if (rest >= 0) {
+        lines.push(`音楽（${fmtTime(audio.duration)}）は、KEEP DRIVEN で止まったあとも約${fmtTime(rest)}流れます。途中で止めるときは M（3秒で小さくして止める）。`);
+      } else {
+        over = true;
+        const posts = roll.querySelectorAll('.r-post').length;
+        const perPost = posts ? geo.base.postsHeight / posts : 0;   // 投稿1件ぶんの平均の高さ（間も含む）
+        const cut = perPost ? Math.ceil((-rest * geo.speed) / perPost) : 0;
+        lines.push(`音楽（${fmtTime(audio.duration)}）より約${fmtTime(-rest)}長いので、最後は音楽がなくなります。`
+          + (cut && cut < posts ? `曲に収めるには、投稿をあと約${cut}件対象外にするか、上の秒数を短くします（そのぶん速くなります）。` : '上の秒数を短くします（そのぶん速くなります）。'));
+      }
+    }
     const est = $('estimate');
     est.textContent = lines.join('\n');
-    // 長さが足りず、幹事の名前を決めた秒数で流せないとき（全体の6割までにしている）
-    const staffShort = staffCount >= 2 && geo.staffSec < settings.staffSec * 0.97;
-    if (staffShort) est.textContent += `\n長さが足りないので、幹事の名前は1人 ${settings.staffSec}秒ずつにできません。長さを延ばしてください。`;
-    est.classList.toggle('warn', staffShort);
-    renderCheck(geo.base, total, roll);
+    est.classList.toggle('warn', over);
+    const fitBtn = $('fit-btn');
+    fitBtn.hidden = fit == null || fit === settings.crossSec;
+    fitBtn.textContent = `${fit}秒にする（曲に収まるいちばんゆっくりな速さ）`;
+    fitBtn.dataset.value = String(fit);
+    renderCheck(geo, roll);
     roll.replaceChildren();
   }
 
@@ -1459,70 +1477,60 @@
   const CROSS_OK = 10;    // 文字が画面の下から上まで動く秒数。これより短いと目で追いにくい
   const CROSS_MIN = 6;    // これより短いと、短い投稿でも読みにくい
   const CROSS_SLOW = 40;  // これより長いと、間延びして見える
-  const PLAN_SECS = [180, 240, 300];  // 予定している長さ（3〜5分。10/29 RYO）
   const LEVELS = [
     { label: 'ちょうどよい', cls: 'ok', text: '全部の投稿を読める速さです。' },
     { label: '速め', cls: 'warn', text: '' },
     { label: '速すぎ', cls: 'bad', text: 'ほとんどの人が読みきれない速さです。' },
     { label: 'ゆっくりめ', cls: 'slow', text: '読めますが、流れがゆっくりで間延びして見えるかもしれません。' },
   ];
+  const levelOf = (rate, cross) => (rate > READ_MAX || cross < CROSS_MIN ? 2
+    : rate > READ_OK || cross < CROSS_OK ? 1
+    : cross > CROSS_SLOW ? 3 : 0);
   const countChars = (text) => text.replace(/\s/g, '').length;
   let unreadable = new Map();   // 画面にいる間に読みきれない投稿 { id → { need, visible } }
-
-  // 長さ total のときの流れ方。keep は、本文を減らしたときに残す割合（1＝今のまま）
-  function flowAt(base, total, keep = 1) {
-    const distance0 = base.distance - base.postsHeight * (1 - keep);
-    const distance = distance0 + Math.max(0, base.n - 1) * staffGap(base, total, distance0);
-    const speed = distance / total;                      // 1秒に動く距離
-    const rate = (base.chars * speed) / base.postsHeight; // 1秒に流れる本文の字数
-    const cross = base.height / speed;                   // 文字が画面の下から上まで動く秒数
-    const level = rate > READ_MAX || cross < CROSS_MIN ? 2
-      : rate > READ_OK || cross < CROSS_OK ? 1
-      : cross > CROSS_SLOW ? 3 : 0;
-    return { speed, rate, cross, level };
-  }
-  const notFast = (f) => f.rate <= READ_OK && f.cross >= CROSS_OK;
-
-  // lo〜hi の整数で、pred が初めて成り立つところ（pred は、一度成り立てばその先もずっと成り立つもの）
-  function firstTrue(lo, hi, pred) {
-    if (pred(lo)) return lo;
-    if (!pred(hi)) return null;
-    while (hi - lo > 1) {
-      const mid = Math.floor((lo + hi) / 2);
-      if (pred(mid)) hi = mid; else lo = mid;
-    }
-    return hi;
-  }
 
   const levelBadge = (level) => el('span', `level ${LEVELS[level].cls}`, LEVELS[level].label);
   const fmtNum = (n) => Math.round(n).toLocaleString('ja-JP');
   const fmtRate = (r) => (Math.round(r * 10) / 10).toFixed(1);
 
-  function renderCheck(base0, total, roll) {
+  // 速さが決まっているので、1秒に流れる字数は、投稿の詰まり具合（長い投稿が多いか）で決まる
+  function renderCheck(geo, roll) {
     const box = $('check');
     const items = [...roll.querySelectorAll('.r-post')].map((item) => ({
       id: item.dataset.id,
       height: item.offsetHeight,
       chars: countChars(item.querySelector('.r-body').textContent),
     }));
-    const base = { ...base0, chars: items.reduce((n, p) => n + p.chars, 0) };
+    const chars = items.reduce((n, p) => n + p.chars, 0);
+    const { height, postsHeight } = geo.base;
     unreadable = new Map();
-    if (!items.length || !base.chars || !base.postsHeight) {
+    if (!items.length || !chars || !postsHeight) {
       box.replaceChildren(el('p', 'check-lines', '流す投稿がありません。'));
       $('bar-verdict').replaceChildren();
       updateReadBadges();
       return;
     }
-    const now = flowAt(base, total);
+    const rate = (chars * geo.speed) / postsHeight;   // 1秒に流れる本文の字数
+    const cross = settings.crossSec;
+    const level = levelOf(rate, cross);
     const frag = document.createDocumentFragment();
 
     // 判定
+    // 1件ずつ：画面にいる間に読みきれるか（読むのに要る秒数＝字数 ÷ 1秒に読める字数）
+    items.forEach((p) => {
+      const visible = (height - p.height) / geo.speed;
+      const need = p.chars / READ_OK;
+      if (visible < need) unreadable.set(p.id, { need, visible: Math.max(0, visible) });
+    });
+
     const verdict = el('p', 'verdict');
-    let reason = LEVELS[now.level].text;
-    if (now.level === 1) {
-      reason = now.rate > READ_OK ? '全部の投稿は読みきれない速さです。' : '流れるのが速く、目で追いにくいです。';
+    let reason = LEVELS[level].text;
+    if (level === 1) {
+      reason = rate <= READ_OK ? '流れるのが速く、目で追いにくいです。'
+        : unreadable.size ? '全部の投稿は読みきれない速さです。'
+        : '全部の投稿を続けて読むには少し速い速さです。1件ずつなら、画面にいる間に読みきれます。';
     }
-    verdict.append(levelBadge(now.level), el('span', '', reason));
+    verdict.append(levelBadge(level), el('span', '', reason));
     frag.append(verdict);
 
     const lines = el('div', 'check-lines');
@@ -1531,68 +1539,23 @@
       p.append(`${label} `, el('b', '', value), goal ? `（目安 ${goal}）` : '');
       lines.append(p);
     };
-    line('1秒に流れる本文', `約${fmtRate(now.rate)}字`, `${READ_OK}字まで`);
-    line('文字が画面の下から上まで動くのに', `約${Math.round(now.cross)}秒`, `${CROSS_OK}〜${CROSS_SLOW}秒`);
-    line('流す本文', `${fmtNum(base.chars)}字`, '');
-    lines.lastChild.append(`（${items.length}件、1件平均 約${fmtNum(base.chars / items.length)}字）`);
+    line('1秒に流れる本文', `約${fmtRate(rate)}字`, `${READ_OK}字まで`);
+    line('文字が画面の下から上まで動くのに', `${cross}秒`, `${CROSS_OK}〜${CROSS_SLOW}秒`);
+    line('流す本文', `${fmtNum(chars)}字`, '');
+    lines.lastChild.append(`（${items.length}件、1件平均 約${fmtNum(chars / items.length)}字）`);
     frag.append(lines);
 
-    // ちょうどよい長さの範囲：速すぎない一番短い長さ 〜 間延びしない一番長い長さ
-    const LIMIT = 3600;
-    const from = firstTrue(MIN_SEC, LIMIT, (t) => notFast(flowAt(base, t)));
-    const slowFrom = firstTrue(MIN_SEC, LIMIT, (t) => flowAt(base, t).cross > CROSS_SLOW);
+    // この投稿に合う秒数：1秒に流れる字数が目安以内になる秒数 〜 間延びしない秒数（字数は秒数に反比例する）
+    const okFrom = Math.max(CROSS_OK, Math.ceil((chars * height) / (READ_OK * postsHeight)));
     const range = el('p', 'check-lines');
-    if (from == null) {
-      range.append('ちょうどよい長さ：1時間を超えます');
-    } else {
-      const fromText = fmtTime(Math.ceil(from / 10) * 10);
-      const to = slowFrom == null ? null : Math.floor((slowFrom - 1) / 10) * 10;
-      range.append('ちょうどよい長さ（今の件数のとき） ',
-        el('b', '', to != null && to > from ? `約${fromText}〜${fmtTime(to)}` : `約${fromText}以上`));
-      // 「音楽の長さに合わせる」ときは、曲の終わりの10秒前に止まるので、曲はそのぶん長いものを選ぶ
-      if (musicMode()) range.append(`（曲の長さなら、これに${MUSIC_TAIL_SEC}秒足した長さ）`);
-    }
+    range.append('この投稿に合う秒数 ', el('b', '', okFrom <= CROSS_SLOW ? `${okFrom}〜${CROSS_SLOW}秒` : `${okFrom}秒以上`));
     frag.append(range);
-
-    // 予定している長さ（3〜5分）のとき
-    frag.append(el('p', 'check-sub', '予定の長さ（3〜5分）のとき'));
-    const table = el('table', 'plan-table');
-    PLAN_SECS.forEach((sec) => {
-      const f = flowAt(base, sec);
-      const tr = el('tr', Math.round(total) === sec ? 'is-current' : '');
-      const tdLevel = el('td');
-      tdLevel.append(levelBadge(f.level));
-      tr.append(el('td', 'plan-time', fmtTime(sec)), tdLevel, el('td', '', `1秒に${fmtRate(f.rate)}字・${Math.round(f.cross)}秒`));
-      table.append(tr);
-    });
-    frag.append(table);
-
-    // 今の長さのまま、ちょうどよくするには、本文をどれだけ減らせばよいか
-    if (!notFast(now)) {
+    if (level === 1 || level === 2) {
       const fix = el('p', 'check-lines fix');
-      if (!notFast(flowAt(base, total, 0))) {
-        fix.append(`今の長さ（${fmtTime(total)}）では、投稿を減らしてもちょうどよくなりません。長さを延ばしてください。`);
-      } else {
-        let lo = 0;
-        let hi = 1;
-        for (let i = 0; i < 30; i++) {
-          const mid = (lo + hi) / 2;
-          if (notFast(flowAt(base, total, mid))) lo = mid; else hi = mid;
-        }
-        const cut = base.chars * (1 - lo);
-        fix.append(`今の長さ（${fmtTime(total)}）でちょうどよくするには、本文をあと `,
-          el('b', '', `約${fmtNum(cut)}字`),
-          `（1件平均の長さで 約${Math.ceil(items.length * (1 - lo))}件）対象外にします。`);
-      }
+      fix.append('ちょうどよくするには、左の「速さと長さ」の秒数を ', el('b', '', `${okFrom}秒以上`), ' にします（そのぶん長くなります）。');
       frag.append(fix);
     }
 
-    // 1件ずつ：画面にいる間に読みきれるか（読むのに要る秒数＝字数 ÷ 1秒に読める字数）
-    items.forEach((p) => {
-      const visible = (base.height - p.height) / now.speed;
-      const need = p.chars / READ_OK;
-      if (visible < need) unreadable.set(p.id, { need, visible: Math.max(0, visible) });
-    });
     if (unreadable.size) {
       const p = el('p', 'check-lines fix');
       p.append('画面にいる間に読みきれない投稿 ', el('b', '', `${unreadable.size}件`), '（一覧に印を付けました）');
@@ -1601,7 +1564,7 @@
 
     frag.append(el('p', 'hint-text', `このPCの画面 ${screen.width}×${screen.height} で計算しています。目安は、ふつうの黙読の速さ（1分に400〜600字）をもとにしています。`));
     box.replaceChildren(frag);
-    $('bar-verdict').replaceChildren('読みやすさ ', levelBadge(now.level));
+    $('bar-verdict').replaceChildren('読みやすさ ', levelBadge(level), `　長さ 約${fmtTime(geo.total)}`);
     updateReadBadges();
   }
 
@@ -1678,8 +1641,8 @@
     await document.fonts.ready;
     await nextFrame();
     await nextFrame();
-    run.total = totalSec();
-    run.geo = layoutRoll(stage, roll, run.total);
+    run.geo = layoutRoll(stage, roll);
+    run.total = run.geo.total;
     run.elapsed = from ? startElapsed(from, roll) : 0;
     run.rate = 1;
     run.paused = false;
@@ -1808,8 +1771,13 @@
   });
 
   // 全画面の出入りなどで画面の大きさが変わったら、進み具合はそのままで位置だけ計算し直す
+  // 画面の大きさが変わると長さも少し変わるので、どこまで進んだか（割合）を保ったまま計算し直す
   window.addEventListener('resize', () => {
-    if (run.active) run.geo = layoutRoll($('stage'), $('roll'), run.total);
+    if (!run.active) return;
+    const done = run.elapsed / run.total;
+    run.geo = layoutRoll($('stage'), $('roll'));
+    run.total = run.geo.total;
+    run.elapsed = done * run.total;
   });
   document.addEventListener('visibilitychange', () => {
     if ((run.active || deck.active) && document.visibilityState === 'visible') requestWakeLock();
@@ -2226,7 +2194,6 @@
   renderScriptInfo();
   startHost();
   renderLastButton();
-  renderMusicMode();
   document.fonts.ready.then(scheduleEstimate);  // 字体が届いたら、長さの目安を計算し直す
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {

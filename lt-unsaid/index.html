@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   アフター共有「LTで、あえて話さなかったこと」（0次会 LT会 RYOの発表の裏側をまとめた図解）
-  11/5制作、11/6にスマホ・タブレット向けに作り直し、11/10に本編の要約を入れて、話したことと話さなかったことを並べる形に作り直し。
+  11/5制作、11/6にスマホ・タブレット向けに作り直し、11/10に本編の要約を入れて、話したことと話さなかったことを並べる形に作り直し、同日に言葉と見分け方を整理。
   このフォルダ（lt-unsaid/public/）の中身は、公開用リポジトリ Ryo-M-alt/adspt-0jikai の lt-unsaid/ に自動でコピーされ、
   https://ryo-m-alt.github.io/adspt-0jikai/lt-unsaid/ で公開されます。
   決めたことは lt-unsaid/README.md に書いてあります。
@@ -28,9 +28,9 @@
 <style>
 /*
   Layout: どの画面幅でも同じ並び。
-  見出し → 見分け方（話したこと＝明るい面と実線／話さなかったこと＝暗い面と点線）
+  見出し → 見分け方（話したこと＝明るい面と実線の枠／話さなかったこと＝暗い面と点線の枠）
   → 本編の流れ（7場面。パソコンは左に話したこと・右に話さなかったこと、スマホは縦に並べる）
-  → 話さなかった5つの話を詳しく → 話さなかった理由の分類 → 出典
+  → 話さなかった5つの話を詳しく → 出典
 */
 :root {
   --bg: #0b1531;
@@ -115,8 +115,7 @@ q { quotes: "「" "」"; }
   color: var(--gold);
 }
 
-/* ---------- 理由のラベル ---------- */
-/* 塗り：5分の組み立ての都合で外した／線：聞く人のことを考えて外した */
+/* ---------- 話さなかった理由のラベル ---------- */
 .tag {
   display: inline-block;
   color: var(--bg);
@@ -128,10 +127,7 @@ q { quotes: "「" "」"; }
   line-height: 1.6;
   padding: 0 7px;
 }
-.tag--listener { color: var(--gold-hi); background: transparent; border-color: var(--gold-hi); }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.swatch { display: inline-block; width: 22px; height: 12px; background: var(--gold); border: 1px solid var(--gold); flex: none; }
-.swatch--listener { background: transparent; border-color: var(--gold-hi); }
 
 /* ---------- 見分け方 ---------- */
 .legend { display: grid; gap: 14px; }
@@ -140,13 +136,10 @@ q { quotes: "「" "」"; }
 .legend__box b { font-family: var(--font-display); font-size: 1rem; }
 .legend__box--said { background: var(--said-bg); border: 1px solid var(--said-line); }
 .legend__box--unsaid { background: var(--unsaid-bg); border: 1px dashed var(--unsaid-line); }
-.legend__box span { color: var(--ink-soft); }
-.legend__tags { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
-.legend__tags span { display: inline-flex; align-items: center; gap: 8px; }
 
 /* ---------- 本編の流れ ---------- */
 .flow { display: grid; gap: 18px; }
-.flow h2, .details h2, .reasons h2 { font-size: 1.45rem; }
+.flow h2, .details h2 { font-size: 1.45rem; }
 .flow__cols { display: none; }
 .scenes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .scene { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; scroll-margin-top: 16px; }
@@ -266,7 +259,6 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 .steps > div { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 8px; font-size: 0.93rem; line-height: 1.7; }
 .steps dt { color: var(--muted); font-size: 0.82rem; padding-top: 2px; }
 .steps dd { margin: 0; min-width: 0; }
-.voice { margin: 6px 0 0; padding: 10px 14px; background: var(--surface); border-left: 2px solid var(--gold); font-size: 0.9rem; line-height: 1.75; }
 
 /* No.4 本音 */
 .node--core { border-color: var(--gold); }
@@ -290,16 +282,6 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 .future__lines { display: grid; gap: 8px; font-size: 0.98rem; }
 .future__last { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.3rem, 4.4vw, 1.7rem); color: var(--gold-hi); line-height: 1.5; margin-top: 4px; }
 
-/* ---------- 理由の分類 ---------- */
-.reasons { display: grid; gap: 20px; }
-.reasons__lead { color: var(--muted); }
-.groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
-.group { display: grid; align-content: start; border-top: 1px solid var(--gold); }
-.group h3 { font-size: 1.05rem; padding: 12px 0 8px; color: var(--gold-hi); display: flex; align-items: center; gap: 10px; }
-.group ul { list-style: none; margin: 0; padding: 0; }
-.group li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 0.92rem; line-height: 1.65; }
-.group li span { color: var(--muted); }
-
 /* ---------- 出典 ---------- */
 .foot { border-top: 1px solid var(--line); padding-top: 20px; display: grid; gap: 6px; color: var(--muted); font-size: 0.82rem; line-height: 1.75; }
 
@@ -314,8 +296,6 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 
 @media (min-width: 640px) {
   .future { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr); align-items: start; }
-  .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
-  .group li { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px; }
 }
 
 /* パソコン・タブレット横向き：左に話したこと、右に話さなかったこと */
@@ -359,12 +339,8 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
   <section class="legend" aria-labelledby="legend-h">
     <h2 id="legend-h" class="label">見分け方</h2>
     <div class="legend__boxes">
-      <p class="legend__box legend__box--said"><b>話したこと</b><span>本編の要約と決め台詞。明るい面と実線の枠</span></p>
-      <p class="legend__box legend__box--unsaid"><b>話さなかったこと</b><span>暗い面と点線の枠。押すと詳しい説明に移ります</span></p>
-    </div>
-    <div class="legend__tags">
-      <span><i class="swatch swatch--listener" aria-hidden="true"></i>線のラベル：聞く人のことを考えて外した</span>
-      <span><i class="swatch" aria-hidden="true"></i>塗りのラベル：5分の組み立ての都合で外した</span>
+      <p class="legend__box legend__box--said"><b>話したこと</b></p>
+      <p class="legend__box legend__box--unsaid"><b>話さなかったこと</b></p>
     </div>
   </section>
 
@@ -379,12 +355,12 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <div class="said">
           <p class="said__name"><span class="said__idx">1</span>つかみ</p>
           <p class="said__line"><q>AI時代、<span class="nb">コミュ力がないと詰む</span></q></p>
-          <p class="said__sum">あえて強い言葉で引きつけて、コミュ力の話を始めた。自分は、コミュ力がすごく苦手。</p>
+          <p class="said__sum">あえて強い言葉で引きつけて、コミュ力の話を始めた。自分は、コミュニケーションがすごく苦手。</p>
         </div>
         <a class="unsaid" href="#talk-1">
           <span class="unsaid__head">話さなかったこと　No.1・時代</span>
           <span class="unsaid__title"><span class="nb">コミュ力は、</span><span class="nb">ほぼ全てになる</span></span>
-          <span class="tags"><span class="tag tag--listener">聞く人はもう気付いている</span></span>
+          <span class="tags"><span class="tag">聞く人はもう気付いている</span></span>
           <span class="unsaid__more">詳しく読む ↓</span>
         </a>
       </li>
@@ -419,7 +395,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <div class="said">
           <p class="said__name"><span class="said__idx">5</span>自分だけの戦い方</p>
           <p class="said__line"><q>小さい約束は最強</q></p>
-          <p class="said__sum">「私はこれからこうします」という約束を繰り返し、守ってきた。要求は一つも叶えていないのに、その筋で有名な人に「あんたは俺の頼みを全部聞いてくれた」と言われた。</p>
+          <p class="said__sum">「私はこれからこうします」という約束を繰り返し、守ってきた。要求は一つも叶えていないのに、「あんたは俺の頼みを全部聞いてくれた」と言われた。</p>
         </div>
         <a class="unsaid" href="#talk-3">
           <span class="unsaid__head">話さなかったこと　No.3・技</span>
@@ -435,9 +411,9 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
           <p class="said__sum">ひどい人見知りでシャイで、人に意見なんてできないと思っていた。でも、主張したいことを伝えるスキルがなかっただけだった。行政マンとして覚醒し、理想の未来を熱く語れるようになった。</p>
         </div>
         <a class="unsaid unsaid--core" href="#talk-4">
-          <span class="unsaid__head">話さなかったこと　No.4・全部の挑戦の裏にあった本音</span>
+          <span class="unsaid__head">話さなかったこと　No.4・裏にあった本当の渇望</span>
           <span class="unsaid__title"><span class="nb">本当は、</span><span class="nb">人を導きたかった</span></span>
-          <span class="tags"><span class="tag tag--listener">聞く人にとって本質ではない</span></span>
+          <span class="tags"><span class="tag">聞く人にとって本質ではない</span></span>
           <span class="unsaid__more">詳しく読む ↓</span>
         </a>
       </li>
@@ -446,12 +422,12 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
           <p class="said__name"><span class="said__idx">7</span>結論と締め</p>
           <p class="said__line"><q><span class="nb">苦手に挑んだら、</span><span class="nb">隠れた本当の強みが</span><span class="nb">見えた</span></q></p>
           <p class="said__line"><q>いつまでも青くいる</q></p>
-          <p class="said__sum">苦手に強みで挑むと、弱点を補うだけでなく、隠れた本当の強みが見えた。最後に約束した。10代の頃のように、初心のままチャレンジし続ける。</p>
+          <p class="said__sum">苦手に強みで挑むと、弱点を補うだけでなく、隠れた本当の強みが見えた。10代の頃のように、初心のままチャレンジし続ける。</p>
         </div>
         <a class="unsaid" href="#talk-5">
           <span class="unsaid__head">話さなかったこと　No.5・これから</span>
           <span class="unsaid__title"><span class="nb">いつまでも青くいる、</span><span class="nb">の背景</span></span>
-          <span class="tags"><span class="tag tag--listener">聞く人への配慮</span><span class="tag">尺の都合</span></span>
+          <span class="tags"><span class="tag">聞く人への配慮</span></span>
           <span class="unsaid__more">詳しく読む ↓</span>
         </a>
       </li>
@@ -479,7 +455,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <footer class="why">
           <p class="why__label">話さなかった理由</p>
           <div class="why__item">
-            <span class="tag tag--listener">聞く人はもう気付いている</span>
+            <span class="tag">聞く人はもう気付いている</span>
             <p>聞く人はAIスクールの同期。日本人は言わなくても伝わる会話に慣れているけれど、AIは暗黙の了解を知らない。全部を言葉にする難しさを、みんなスクールで感じてきた。コミュ力の大切さには、もう気付いていると考えた。</p>
           </div>
         </footer>
@@ -537,12 +513,10 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
           </div>
           <dl class="steps">
             <div><dt>出発点</dt><dd>気の利いた表現はできない。他人の感情は読めない。</dd></div>
-            <div><dt>気付き</dt><dd>でも、自分の気持ちならわかる。</dd></div>
+            <div><dt>気付き</dt><dd>自分の気持ちならわかる。</dd></div>
             <div>
               <dt>やり方</dt>
-              <dd>今、自分が感じていることを素直に話す。
-                <p class="voice">あなたは今怒っているけれど、理由がわからずに困っています。ただ、私は本心から、あなたとこう接したいと思っています。</p>
-              </dd>
+              <dd>今、自分が感じていることを素直に話す。</dd>
             </div>
             <div><dt>やめたこと</dt><dd>仮面を付けるように、壁を作って話すこと。</dd></div>
             <div><dt>結果</dt><dd>人間関係が好転した。</dd></div>
@@ -552,7 +526,6 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
           <p class="why__label">話さなかった理由</p>
           <div class="why__item">
             <span class="tag">尺の都合</span>
-            <p>本当は話したかった。5分に収めるために削った。</p>
           </div>
         </footer>
       </article>
@@ -562,7 +535,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <div class="node__head"><span class="pos">本音</span><span class="no">No.4</span><a class="back" href="#scene-6">本編「本当の強さ」へ戻る</a></div>
         <h3 id="n4">本当は、<span class="nb">話を聞いてほしかった。</span><span class="nb">人を導きたかった。</span></h3>
         <div class="node__body">
-          <p class="muted">全部の挑戦の裏にあった本音です。</p>
+          <p class="muted">苦手への挑戦の裏に隠れていた、本当の渇望。</p>
           <div class="shift">
             <div class="shift__from">
               <span class="shift__k">思っていた自分</span>
@@ -583,7 +556,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <footer class="why">
           <p class="why__label">話さなかった理由</p>
           <div class="why__item">
-            <span class="tag tag--listener">聞く人にとって本質ではない</span>
+            <span class="tag">聞く人にとって本質ではない</span>
             <p>私がどのタイプかより、私が何を見つけて、どう変わったかのほうが大事だと判断した。</p>
           </div>
         </footer>
@@ -602,7 +575,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
             </div>
             <div class="future__lines">
               <p>来年、40歳。人生の折り返し地点に差しかかる。</p>
-              <p>それでも私は、失敗を前提にする。初回は必ず失敗すると思っている。</p>
+              <p>それでも失敗を恐れない。</p>
               <p>だから、いつまでも挑戦する人生にできる。</p>
               <p class="future__last"><span class="nb">いつまでも、</span><span class="nb">アンダードッグでいい。</span></p>
             </div>
@@ -611,39 +584,14 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <footer class="why">
           <p class="why__label">話さなかった理由</p>
           <div class="why__item">
-            <span class="tag tag--listener">聞く人への配慮</span>
+            <span class="tag">聞く人への配慮</span>
             <p>年齢と失敗の話は、聞いている誰かを傷つけるかもしれないと思った。</p>
-          </div>
-          <div class="why__item">
-            <span class="tag">尺の都合</span>
-            <p>本当は熱を込めて話したかった。でも、簡潔にした。</p>
           </div>
         </footer>
       </article>
     </div>
   </section>
 
-  <section class="reasons" aria-labelledby="reasons-h">
-    <h2 id="reasons-h"><span class="nb">話さなかった理由で</span><span class="nb">並べると</span></h2>
-    <p class="reasons__lead">5つのうち3つは、聞く人のことを考えて外した話です。</p>
-    <div class="groups">
-      <div class="group">
-        <h3><i class="swatch swatch--listener" aria-hidden="true"></i>聞く人のことを考えて</h3>
-        <ul>
-          <li><b>聞く人はもう気付いている</b><span>No.1 コミュ力はほぼ全てになる</span></li>
-          <li><b>聞く人にとって本質ではない</b><span>No.4 本当は、人を導きたかった</span></li>
-          <li><b>聞く人への配慮</b><span>No.5 いつまでも青くいる、の背景</span></li>
-        </ul>
-      </div>
-      <div class="group">
-        <h3><i class="swatch" aria-hidden="true"></i>5分の組み立ての都合で</h3>
-        <ul>
-          <li><b>本題から逸れる</b><span>No.2 苦手に、ずっと挑んできた</span></li>
-          <li><b>尺の都合</b><span>No.3 腹を割って話す／No.5 いつまでも青くいる、の背景</span></li>
-        </ul>
-      </div>
-    </div>
-  </section>
 
   <footer class="foot">
     <p>※ 高齢者（65歳以上）の割合が2050年に39.6%になるという、総務省の資料の推計による。<a href="https://www.soumu.go.jp/main_content/000273900.pdf">総務省の資料（PDF）</a></p>

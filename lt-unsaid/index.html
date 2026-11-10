@@ -1,6 +1,7 @@
 <!doctype html>
 <!--
-  アフター共有「LTで、あえて話さなかったこと」（0次会 LT会 RYOの発表の裏側を1枚にまとめた図解。11/5制作、11/6にスマホ・タブレット向けに作り直し）
+  アフター共有「LTで、あえて話さなかったこと」（0次会 LT会 RYOの発表の裏側をまとめた図解）
+  11/5制作、11/6にスマホ・タブレット向けに作り直し、11/10に本編の要約を入れて、話したことと話さなかったことを並べる形に作り直し。
   このフォルダ（lt-unsaid/public/）の中身は、公開用リポジトリ Ryo-M-alt/adspt-0jikai の lt-unsaid/ に自動でコピーされ、
   https://ryo-m-alt.github.io/adspt-0jikai/lt-unsaid/ で公開されます。
   決めたことは lt-unsaid/README.md に書いてあります。
@@ -15,34 +16,39 @@
 <!-- 同期向けの共有ページなので、検索結果には出さない -->
 <meta name="robots" content="noindex">
 <title>LTで話さなかったこと｜ADS卒業パーティー in TOKYO</title>
-<meta name="description" content="0次会のLT会で、RYOが5分の発表に入れなかった5つの話を、本音を真ん中に置いて1枚にまとめました。">
+<meta name="description" content="0次会のLT会でRYOが話した5分の要約と、その裏であえて話さなかった5つの話を、場面ごとに並べてまとめました。">
 <!-- SlackやLINEにURLを貼ったときに出る見出しと説明 -->
 <meta property="og:type" content="article">
 <meta property="og:title" content="LTで話さなかったこと｜ADS卒業パーティー in TOKYO">
-<meta property="og:description" content="0次会のLT会で、RYOが5分の発表に入れなかった5つの話を、本音を真ん中に置いて1枚にまとめました。">
+<meta property="og:description" content="0次会のLT会でRYOが話した5分の要約と、その裏であえて話さなかった5つの話を、場面ごとに並べてまとめました。">
 <meta property="og:url" content="https://ryo-m-alt.github.io/adspt-0jikai/lt-unsaid/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
 /*
-  Layout: どの画面幅でも同じ形。
-  本編の帯（5分で話したこと）→ 区切り線 → 全体図（小さい十字。真ん中が本音。箱を押すと詳しい説明へ）
-  → 5つの話の詳しい説明（No.1〜No.5を縦に並べる）→ 話さなかった理由の分類
+  Layout: どの画面幅でも同じ並び。
+  見出し → 見分け方（話したこと＝明るい面と実線／話さなかったこと＝暗い面と点線）
+  → 本編の流れ（7場面。パソコンは左に話したこと・右に話さなかったこと、スマホは縦に並べる）
+  → 話さなかった5つの話を詳しく → 話さなかった理由の分類 → 出典
 */
 :root {
   --bg: #0b1531;
   --bg-deep: #060c20;
   --surface: #111d42;
   --surface-hi: #182856;
+  --said-bg: #1c2d5e;
+  --said-line: #4a5d96;
+  --unsaid-bg: #070e25;
+  --unsaid-line: #56679a;
   --line: #2a3a69;
   --gold: #c8a65a;
   --gold-hi: #e4cd92;
   --ink: #e8ebf3;
+  --ink-soft: #c9d0e4;
   --muted: #9ea9c7;
   --font-display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif;
   --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
-  --ov-gap: 10px;
   color-scheme: dark;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -57,7 +63,7 @@
 body {
   margin: 0;
   background-color: var(--bg);
-  background-image: linear-gradient(180deg, var(--bg) 0, var(--bg) 640px, var(--bg-deep) 100%);
+  background-image: linear-gradient(180deg, var(--bg) 0, var(--bg) 900px, var(--bg-deep) 100%);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -70,7 +76,7 @@ a { color: var(--gold-hi); text-underline-offset: 3px; }
 a:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
 
 .wrap {
-  max-width: 880px;
+  max-width: 920px;
   margin: 0 auto;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
@@ -89,23 +95,18 @@ h1, h2, h3 {
 }
 
 p { margin: 0; }
+q { quotes: "「" "」"; }
+/* iPhoneのSafariは言葉の切れ目で折り返す設定に対応していないので、見出しは言葉のまとまりごとにこれで囲む */
 .nb { display: inline-block; }
 .muted { color: var(--muted); }
 
 /* ---------- 見出し ---------- */
 .masthead { display: grid; gap: 16px; }
-.eyebrow {
-  color: var(--gold);
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
-  font-weight: 500;
-}
+.eyebrow { color: var(--gold); font-size: 0.8rem; letter-spacing: 0.14em; font-weight: 500; }
 .masthead h1 { font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 800; letter-spacing: 0.02em; }
 .lead { font-size: 1.02rem; max-width: 40em; }
-.lead q { quotes: "「" "」"; }
 .byline { color: var(--muted); font-size: 0.85rem; letter-spacing: 0.04em; }
 
-/* 小見出し（金色の小さいラベル） */
 .label {
   font-family: var(--font-body);
   font-size: 0.8rem;
@@ -114,50 +115,7 @@ p { margin: 0; }
   color: var(--gold);
 }
 
-/* ---------- 5分で話したこと ---------- */
-.told { display: grid; gap: 16px; }
-.told__list {
-  margin: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  border-top: 1px solid var(--gold);
-  border-bottom: 1px solid var(--line);
-}
-.told__list > div { padding: 16px 0; display: grid; gap: 6px; align-content: start; min-width: 0; }
-.told__list > div + div { border-top: 1px solid var(--line); }
-.told__list dt { color: var(--muted); font-size: 0.8rem; letter-spacing: 0.08em; }
-.told__list dd { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.12rem; line-height: 1.55; }
-.told__list dd small {
-  display: block;
-  margin-top: 6px;
-  font-family: var(--font-body);
-  font-weight: 400;
-  font-size: 0.88rem;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.waterline {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--gold-hi);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.02rem;
-  letter-spacing: 0.06em;
-  text-align: center;
-}
-.waterline::before, .waterline::after {
-  content: "";
-  flex: 1;
-  min-width: 16px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold));
-}
-.waterline::after { background: linear-gradient(90deg, var(--gold), transparent); }
-
-/* ---------- ラベル（話さなかった理由） ---------- */
+/* ---------- 理由のラベル ---------- */
 /* 塗り：5分の組み立ての都合で外した／線：聞く人のことを考えて外した */
 .tag {
   display: inline-block;
@@ -165,105 +123,97 @@ p { margin: 0; }
   background: var(--gold);
   border: 1px solid var(--gold);
   font-weight: 700;
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
   line-height: 1.6;
-  padding: 0 8px;
+  padding: 0 7px;
 }
-.tag--listener {
-  color: var(--gold-hi);
-  background: transparent;
-  border-color: var(--gold-hi);
-}
+.tag--listener { color: var(--gold-hi); background: transparent; border-color: var(--gold-hi); }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.swatch { display: inline-block; width: 22px; height: 12px; background: var(--gold); border: 1px solid var(--gold); flex: none; }
+.swatch--listener { background: transparent; border-color: var(--gold-hi); }
 
-/* ---------- 全体図 ---------- */
-.overview { display: grid; gap: 16px; scroll-margin-top: 16px; }
-.ov-map {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
-  grid-template-areas:
-    ".    era    ."
-    "past core   skill"
-    ".    future .";
-  gap: var(--ov-gap);
-}
-.ov--era { grid-area: era; }
-.ov--past { grid-area: past; }
-.ov--core { grid-area: core; }
-.ov--skill { grid-area: skill; }
-.ov--future { grid-area: future; }
+/* ---------- 見分け方 ---------- */
+.legend { display: grid; gap: 14px; }
+.legend__boxes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.legend__box { display: grid; gap: 4px; align-content: start; padding: 12px 12px 14px; min-width: 0; font-size: 0.84rem; line-height: 1.65; }
+.legend__box b { font-family: var(--font-display); font-size: 1rem; }
+.legend__box--said { background: var(--said-bg); border: 1px solid var(--said-line); }
+.legend__box--unsaid { background: var(--unsaid-bg); border: 1px dashed var(--unsaid-line); }
+.legend__box span { color: var(--ink-soft); }
+.legend__tags { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.legend__tags span { display: inline-flex; align-items: center; gap: 8px; }
 
-.ov {
-  position: relative;
-  min-width: 0;
+/* ---------- 本編の流れ ---------- */
+.flow { display: grid; gap: 18px; }
+.flow h2, .details h2, .reasons h2 { font-size: 1.45rem; }
+.flow__cols { display: none; }
+.scenes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.scene { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; scroll-margin-top: 16px; }
+
+.said {
   display: grid;
   gap: 6px;
   align-content: start;
-  padding: 10px 7px 11px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  min-width: 0;
+  padding: 14px 16px 16px;
+  background: var(--said-bg);
+  border: 1px solid var(--said-line);
+}
+.said__name { display: flex; align-items: baseline; gap: 10px; color: var(--gold); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; }
+.said__idx { color: var(--muted); font-weight: 500; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.said__line {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.22rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.said__sum { color: var(--ink-soft); font-size: 0.9rem; line-height: 1.75; }
+
+.unsaid {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-width: 0;
+  margin-left: 22px;
+  padding: 12px 14px 14px;
+  background: var(--unsaid-bg);
+  border: 1px dashed var(--unsaid-line);
   color: var(--ink);
   text-decoration: none;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color 0.15s ease;
 }
-.ov:hover { border-color: var(--gold); background: var(--surface-hi); }
-.ov:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
-.ov--core {
-  z-index: 1;
-  align-content: center;
-  background: var(--surface-hi);
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px rgba(200, 166, 90, 0.5);
-}
-.ov__pos { color: var(--gold); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; line-height: 1.5; }
-.ov__no { color: var(--muted); font-weight: 500; letter-spacing: 0.04em; margin-left: 4px; font-variant-numeric: tabular-nums; }
-.ov__title {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.9rem;
-  line-height: 1.45;
-  word-break: auto-phrase;
-}
-.ov--core .ov__title { color: var(--gold-hi); font-size: 1rem; }
-.ov__tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.ov .tag { font-size: 0.64rem; letter-spacing: 0.02em; line-height: 1.5; padding: 1px 5px; }
-
-/* 本音へつなぐ線（十字） */
-.ov--era::after,
-.ov--future::before,
-.ov--past::after,
-.ov--skill::before {
+.unsaid:hover { border-color: var(--gold-hi); }
+.unsaid:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+/* 話したことから、裏の話さなかったことへつなぐ点線（スマホ：かぎ型） */
+.unsaid::before {
   content: "";
   position: absolute;
-  background: var(--gold);
+  left: -14px;
+  top: -11px;
+  width: 13px;
+  height: 31px;
+  border-left: 1px dashed var(--unsaid-line);
+  border-bottom: 1px dashed var(--unsaid-line);
 }
-.ov--era::after { left: 50%; bottom: calc(-1 * var(--ov-gap) - 1px); width: 1px; height: var(--ov-gap); }
-.ov--future::before { left: 50%; top: calc(-1 * var(--ov-gap) - 1px); width: 1px; height: var(--ov-gap); }
-.ov--past::after { top: 50%; right: calc(-1 * var(--ov-gap) - 1px); height: 1px; width: var(--ov-gap); }
-.ov--skill::before { top: 50%; left: calc(-1 * var(--ov-gap) - 1px); height: 1px; width: var(--ov-gap); }
+.unsaid--core { border-color: var(--gold); }
+.unsaid--core::before { border-color: var(--gold); }
+.unsaid__head { font-size: 0.74rem; color: var(--muted); letter-spacing: 0.1em; }
+.unsaid--core .unsaid__head { color: var(--gold); }
+.unsaid__title { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; line-height: 1.5; }
+.unsaid--core .unsaid__title { color: var(--gold-hi); }
+.unsaid__more { font-size: 0.78rem; color: var(--gold-hi); }
 
-.ov-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  font-size: 0.82rem;
-  color: var(--muted);
-  line-height: 1.6;
-}
-.ov-legend span { display: inline-flex; align-items: center; gap: 8px; }
-.swatch { width: 22px; height: 12px; background: var(--gold); border: 1px solid var(--gold); flex: none; }
-.swatch--listener { background: transparent; border-color: var(--gold-hi); }
-.ov-hint { color: var(--muted); font-size: 0.82rem; }
-
-/* ---------- 5つの話を詳しく ---------- */
+/* ---------- 話さなかった5つの話を詳しく ---------- */
 .details { display: grid; gap: 20px; }
-.details h2, .reasons h2 { font-size: 1.45rem; }
 .cards { display: grid; gap: 24px; }
 
 .node {
   min-width: 0;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--unsaid-bg);
+  border: 1px dashed var(--unsaid-line);
   padding: 22px 18px 0;
   display: grid;
   gap: 16px;
@@ -273,18 +223,11 @@ p { margin: 0; }
 .node__head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .pos { color: var(--gold); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; }
 .no { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
-.back {
-  margin-left: auto;
-  font-size: 0.78rem;
-  color: var(--muted);
-  text-decoration: none;
-  letter-spacing: 0.04em;
-}
+.back { margin-left: auto; font-size: 0.78rem; color: var(--muted); text-decoration: none; letter-spacing: 0.04em; }
 .back:hover { color: var(--gold-hi); text-decoration: underline; }
 .node h3 { font-size: 1.3rem; }
 .node__body { display: grid; gap: 14px; align-content: start; min-width: 0; }
 
-/* 話さなかった理由 */
 .why {
   margin: 0 -18px;
   padding: 14px 18px 18px;
@@ -300,15 +243,7 @@ p { margin: 0; }
 /* No.1 時代：話の流れ */
 .chain { list-style: none; margin: 0; padding: 0; display: grid; gap: 26px; }
 .chain li { position: relative; display: grid; gap: 2px; min-width: 0; }
-.chain li + li::before {
-  content: "↓";
-  position: absolute;
-  top: -25px;
-  left: 0;
-  color: var(--gold);
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
+.chain li + li::before { content: "↓"; position: absolute; top: -25px; left: 0; color: var(--gold); font-size: 0.95rem; line-height: 1.4; }
 .chain__k { color: var(--gold); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; }
 .chain__v { font-size: 0.95rem; line-height: 1.7; }
 .chain li:last-child .chain__v { font-family: var(--font-display); font-weight: 700; font-size: 1.08rem; color: var(--gold-hi); }
@@ -331,21 +266,10 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 .steps > div { display: grid; grid-template-columns: 4.6em minmax(0, 1fr); gap: 8px; font-size: 0.93rem; line-height: 1.7; }
 .steps dt { color: var(--muted); font-size: 0.82rem; padding-top: 2px; }
 .steps dd { margin: 0; min-width: 0; }
-.voice {
-  margin: 6px 0 0;
-  padding: 10px 14px;
-  background: var(--bg);
-  border-left: 2px solid var(--gold);
-  font-size: 0.9rem;
-  line-height: 1.75;
-}
+.voice { margin: 6px 0 0; padding: 10px 14px; background: var(--surface); border-left: 2px solid var(--gold); font-size: 0.9rem; line-height: 1.75; }
 
 /* No.4 本音 */
-.node--core {
-  background: var(--surface-hi);
-  border: 1px solid var(--gold);
-  box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(200, 166, 90, 0.45);
-}
+.node--core { border-color: var(--gold); }
 .node--core h3 { font-size: clamp(1.4rem, 4.4vw, 1.75rem); font-weight: 800; color: var(--gold-hi); }
 .shift { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 0.92rem; }
 .shift__from, .shift__to { display: grid; gap: 2px; align-content: start; padding: 10px 12px; border: 1px solid var(--line); min-width: 0; }
@@ -356,28 +280,15 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 .shift__arrow { color: var(--gold); text-align: center; line-height: 1; align-self: center; }
 .shift__arrow::before { content: "↓"; }
 .core__text { display: grid; gap: 10px; font-size: 0.95rem; }
-.core__key {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.12rem;
-  line-height: 1.6;
-  border-top: 1px solid var(--gold);
-  padding-top: 12px;
-}
+.core__next { font-size: 0.86rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
 
 /* No.5 これから */
 .future { display: grid; gap: 16px; }
-.future__told { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--line); align-content: start; }
+.future__told { display: grid; gap: 4px; padding: 12px 14px; background: var(--said-bg); border: 1px solid var(--said-line); align-content: start; }
 .future__told b { font-family: var(--font-display); font-size: 1.15rem; }
+.future__told span:last-child { color: var(--ink-soft); font-size: 0.9rem; }
 .future__lines { display: grid; gap: 8px; font-size: 0.98rem; }
-.future__last {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.3rem, 4.4vw, 1.7rem);
-  color: var(--gold-hi);
-  line-height: 1.5;
-  margin-top: 4px;
-}
+.future__last { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.3rem, 4.4vw, 1.7rem); color: var(--gold-hi); line-height: 1.5; margin-top: 4px; }
 
 /* ---------- 理由の分類 ---------- */
 .reasons { display: grid; gap: 20px; }
@@ -386,68 +297,53 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 .group { display: grid; align-content: start; border-top: 1px solid var(--gold); }
 .group h3 { font-size: 1.05rem; padding: 12px 0 8px; color: var(--gold-hi); display: flex; align-items: center; gap: 10px; }
 .group ul { list-style: none; margin: 0; padding: 0; }
-.group li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
-  padding: 10px 0;
-  border-top: 1px solid var(--line);
-  font-size: 0.92rem;
-  line-height: 1.65;
-}
+.group li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 0.92rem; line-height: 1.65; }
 .group li span { color: var(--muted); }
 
 /* ---------- 出典 ---------- */
-.foot {
-  border-top: 1px solid var(--line);
-  padding-top: 20px;
-  display: grid;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.75;
-}
+.foot { border-top: 1px solid var(--line); padding-top: 20px; display: grid; gap: 6px; color: var(--muted); font-size: 0.82rem; line-height: 1.75; }
 
-@media (max-width: 359px) {
-  .ov__title { font-size: 0.8rem; }
-  .ov--core .ov__title { font-size: 0.88rem; }
-}
-
-/* ---------- 幅が広い画面（大きめのスマホ・タブレット・パソコン） ---------- */
+/* ---------- 幅が広い画面 ---------- */
 @media (min-width: 480px) {
-  :root { --ov-gap: 16px; }
-  .ov { padding: 12px 12px 13px; gap: 8px; }
-  .ov__pos { font-size: 0.74rem; }
-  .ov__title { font-size: 1rem; }
-  .ov--core .ov__title { font-size: 1.12rem; }
-  .ov .tag { font-size: 0.7rem; padding: 1px 7px; }
   .node { padding: 24px 22px 0; }
   .why { margin: 0 -22px; padding: 14px 22px 18px; }
   .shift { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .shift__arrow::before { content: "→"; }
+  .said__line { font-size: 1.32rem; }
 }
 
 @media (min-width: 640px) {
-  .told__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .told__list > div { padding: 18px 18px 20px 0; }
-  .told__list > div + div { padding-left: 18px; border-top: 0; border-left: 1px solid var(--line); }
   .future { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr); align-items: start; }
   .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
   .group li { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px; }
 }
 
+/* パソコン・タブレット横向き：左に話したこと、右に話さなかったこと */
 @media (min-width: 760px) {
-  :root { --ov-gap: 28px; }
   .wrap { padding-block: 64px 72px; gap: 56px; }
-  .ov { padding: 16px 16px 18px; }
-  .ov__pos { font-size: 0.78rem; }
-  .ov__title { font-size: 1.12rem; }
-  .ov--core .ov__title { font-size: 1.3rem; }
-  .ov .tag { font-size: 0.74rem; padding: 1px 8px; }
-  .ov--core { box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(200, 166, 90, 0.5); }
+  .flow__cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 36px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .scene { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 36px; align-items: start; }
+  .unsaid { margin-left: 0; margin-top: 18px; }
+  .unsaid::before {
+    left: -37px;
+    top: 26px;
+    width: 36px;
+    height: 0;
+    border-left: 0;
+    border-bottom: 0;
+    border-top: 1px dashed var(--unsaid-line);
+  }
+  .unsaid--core::before { border-top-color: var(--gold); }
   .trials { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .node { padding: 28px 28px 0; }
   .why { margin: 0 -28px; padding: 16px 28px 20px; }
+  .legend__box { padding: 14px 16px 16px; }
 }
 </style>
 </head>
@@ -456,74 +352,119 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
   <header class="masthead">
     <p class="eyebrow">ADS卒業パーティー 0次会 LT会　アフター共有</p>
     <h1>LTで、<span class="nb">あえて話さなかったこと</span></h1>
-    <p class="lead">発表<q>苦手に挑み続けた男が見つけた、自分だけの戦い方</q>の5分に入れなかった、5つの話をまとめました。真ん中にあるのは、全部の挑戦の裏にあった本音です。</p>
+    <p class="lead">発表<q>苦手に挑み続けた男が見つけた、自分だけの戦い方</q>の5分を場面ごとに要約し、その裏であえて話さなかった5つの話を並べました。</p>
     <p class="byline">RYO（幹事リーダー）／2026年11月</p>
   </header>
 
-  <section class="told" aria-labelledby="told-h">
-    <h2 id="told-h" class="label">5分で話したこと</h2>
-    <dl class="told__list">
-      <div>
-        <dt>タイトル</dt>
-        <dd><span class="nb">苦手に挑み続けた男が</span><span class="nb">見つけた、</span><span class="nb">自分だけの戦い方</span></dd>
-      </div>
-      <div>
-        <dt>必殺技</dt>
-        <dd>小さい約束<small>自分はこうする、と自分のこれからの行動を約束し、守ること</small></dd>
-      </div>
-      <div>
-        <dt>締めの約束</dt>
-        <dd>青いままでいる<small>いつまでも初心で、挑戦者でいたい</small></dd>
-      </div>
-    </dl>
-  </section>
-
-  <div class="waterline" role="separator"><span><span class="nb">ここから下が、</span><span class="nb">話さなかったこと</span></span></div>
-
-  <!-- 全体図：どの画面幅でも十字の形のまま。箱を押すと詳しい説明へ移る -->
-  <section class="overview" id="overview" aria-labelledby="overview-h">
-    <h2 id="overview-h" class="label">全体図</h2>
-    <nav class="ov-map" aria-label="話さなかった5つの話の全体図">
-      <a class="ov ov--era" href="#talk-1">
-        <span class="ov__pos">時代<span class="ov__no">No.1</span></span>
-        <span class="ov__title"><span class="nb">コミュ力は、</span><span class="nb">ほぼ</span><span class="nb">全てになる</span></span>
-        <span class="ov__tags"><span class="tag tag--listener"><span class="nb">聞く人は</span><span class="nb">もう気付いている</span></span></span>
-      </a>
-      <a class="ov ov--past" href="#talk-2">
-        <span class="ov__pos">過去<span class="ov__no">No.2</span></span>
-        <span class="ov__title"><span class="nb">苦手に、</span><span class="nb">ずっと</span><span class="nb">挑んできた</span></span>
-        <span class="ov__tags"><span class="tag"><span class="nb">本題から</span><span class="nb">逸れる</span></span></span>
-      </a>
-      <a class="ov ov--core" href="#talk-4">
-        <span class="ov__pos">真ん中・本音<span class="ov__no">No.4</span></span>
-        <span class="ov__title"><span class="nb">本当は、</span><span class="nb">人を</span><span class="nb">導きたかった</span></span>
-        <span class="ov__tags"><span class="tag tag--listener"><span class="nb">聞く人にとって</span><span class="nb">本質ではない</span></span></span>
-      </a>
-      <a class="ov ov--skill" href="#talk-3">
-        <span class="ov__pos">技<span class="ov__no">No.3</span></span>
-        <span class="ov__title"><span class="nb">腹を割って</span><span class="nb">話す</span></span>
-        <span class="ov__tags"><span class="tag">尺の都合</span></span>
-      </a>
-      <a class="ov ov--future" href="#talk-5">
-        <span class="ov__pos">これから<span class="ov__no">No.5</span></span>
-        <span class="ov__title"><span class="nb">青いままでいる、</span><span class="nb">の背景</span></span>
-        <span class="ov__tags"><span class="tag tag--listener">聞く人への配慮</span><span class="tag">尺の都合</span></span>
-      </a>
-    </nav>
-    <div class="ov-legend">
+  <section class="legend" aria-labelledby="legend-h">
+    <h2 id="legend-h" class="label">見分け方</h2>
+    <div class="legend__boxes">
+      <p class="legend__box legend__box--said"><b>話したこと</b><span>本編の要約と決め台詞。明るい面と実線の枠</span></p>
+      <p class="legend__box legend__box--unsaid"><b>話さなかったこと</b><span>暗い面と点線の枠。押すと詳しい説明に移ります</span></p>
+    </div>
+    <div class="legend__tags">
       <span><i class="swatch swatch--listener" aria-hidden="true"></i>線のラベル：聞く人のことを考えて外した</span>
       <span><i class="swatch" aria-hidden="true"></i>塗りのラベル：5分の組み立ての都合で外した</span>
     </div>
-    <p class="ov-hint">箱を押すと、その話の詳しい説明に移ります。</p>
+  </section>
+
+  <section class="flow" aria-labelledby="flow-h">
+    <h2 id="flow-h"><span class="nb">本編の流れと、</span><span class="nb">その裏側</span></h2>
+    <div class="flow__cols" aria-hidden="true">
+      <span class="label">話したこと（本編の要約）</span>
+      <span class="label">その裏で、話さなかったこと</span>
+    </div>
+    <ol class="scenes">
+      <li class="scene" id="scene-1">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">1</span>つかみ</p>
+          <p class="said__line"><q>AI時代、<span class="nb">コミュ力がないと詰む</span></q></p>
+          <p class="said__sum">あえて強い言葉で引きつけて、コミュ力の話を始めた。自分は、コミュ力がすごく苦手。</p>
+        </div>
+        <a class="unsaid" href="#talk-1">
+          <span class="unsaid__head">話さなかったこと　No.1・時代</span>
+          <span class="unsaid__title"><span class="nb">コミュ力は、</span><span class="nb">ほぼ全てになる</span></span>
+          <span class="tags"><span class="tag tag--listener">聞く人はもう気付いている</span></span>
+          <span class="unsaid__more">詳しく読む ↓</span>
+        </a>
+      </li>
+      <li class="scene" id="scene-2">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">2</span>あえて挑む</p>
+          <p class="said__line"><q>一番できない仕事を選んだ</q></p>
+          <p class="said__sum">昔から、あえて苦手なことに挑戦したがる癖があった。だから、説明・説得・根回しで人を動かす、コミュ力がすべての地方公務員になった。</p>
+        </div>
+        <a class="unsaid" href="#talk-2">
+          <span class="unsaid__head">話さなかったこと　No.2・過去</span>
+          <span class="unsaid__title"><span class="nb">苦手に、</span><span class="nb">ずっと挑んできた</span></span>
+          <span class="tags"><span class="tag">本題から逸れる</span></span>
+          <span class="unsaid__more">詳しく読む ↓</span>
+        </a>
+      </li>
+      <li class="scene" id="scene-3">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">3</span>失敗</p>
+          <p class="said__line"><q>一人書庫で泣いた</q></p>
+          <p class="said__sum">最初は、うまくいかなかった。</p>
+        </div>
+      </li>
+      <li class="scene" id="scene-4">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">4</span>強みで補う</p>
+          <p class="said__line"><q><span class="nb">コミュニケーションを</span><span class="nb">学問した</span></q></p>
+          <p class="said__sum">相手の表情や言葉遣いから気持ちを読む型と、そのときの対処を、全部覚えた。</p>
+        </div>
+      </li>
+      <li class="scene" id="scene-5">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">5</span>自分だけの戦い方</p>
+          <p class="said__line"><q>小さい約束は最強</q></p>
+          <p class="said__sum">「私はこれからこうします」という約束を繰り返し、守ってきた。要求は一つも叶えていないのに、その筋で有名な人に「あんたは俺の頼みを全部聞いてくれた」と言われた。</p>
+        </div>
+        <a class="unsaid" href="#talk-3">
+          <span class="unsaid__head">話さなかったこと　No.3・技</span>
+          <span class="unsaid__title"><span class="nb">もう一つの必殺技、</span><span class="nb">腹を割って話す</span></span>
+          <span class="tags"><span class="tag">尺の都合</span></span>
+          <span class="unsaid__more">詳しく読む ↓</span>
+        </a>
+      </li>
+      <li class="scene" id="scene-6">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">6</span>本当の強さ</p>
+          <p class="said__line"><q><span class="nb">実は、</span><span class="nb">自己主張が強いタイプだった</span></q></p>
+          <p class="said__sum">ひどい人見知りでシャイで、人に意見なんてできないと思っていた。でも、主張したいことを伝えるスキルがなかっただけだった。行政マンとして覚醒し、理想の未来を熱く語れるようになった。</p>
+        </div>
+        <a class="unsaid unsaid--core" href="#talk-4">
+          <span class="unsaid__head">話さなかったこと　No.4・全部の挑戦の裏にあった本音</span>
+          <span class="unsaid__title"><span class="nb">本当は、</span><span class="nb">人を導きたかった</span></span>
+          <span class="tags"><span class="tag tag--listener">聞く人にとって本質ではない</span></span>
+          <span class="unsaid__more">詳しく読む ↓</span>
+        </a>
+      </li>
+      <li class="scene" id="scene-7">
+        <div class="said">
+          <p class="said__name"><span class="said__idx">7</span>結論と締め</p>
+          <p class="said__line"><q><span class="nb">苦手に挑んだら、</span><span class="nb">隠れた本当の強みが</span><span class="nb">見えた</span></q></p>
+          <p class="said__line"><q>いつまでも青くいる</q></p>
+          <p class="said__sum">苦手に強みで挑むと、弱点を補うだけでなく、隠れた本当の強みが見えた。最後に約束した。10代の頃のように、初心のままチャレンジし続ける。</p>
+        </div>
+        <a class="unsaid" href="#talk-5">
+          <span class="unsaid__head">話さなかったこと　No.5・これから</span>
+          <span class="unsaid__title"><span class="nb">いつまでも青くいる、</span><span class="nb">の背景</span></span>
+          <span class="tags"><span class="tag tag--listener">聞く人への配慮</span><span class="tag">尺の都合</span></span>
+          <span class="unsaid__more">詳しく読む ↓</span>
+        </a>
+      </li>
+    </ol>
   </section>
 
   <section class="details" aria-labelledby="details-h">
-    <h2 id="details-h">5つの話を詳しく</h2>
+    <h2 id="details-h"><span class="nb">話さなかった5つの話を</span><span class="nb">詳しく</span></h2>
     <div class="cards">
 
-      <!-- No.1 時代 -->
+      <!-- No.1 時代（本編の場面1「つかみ」の裏） -->
       <article class="node" id="talk-1" aria-labelledby="n1">
-        <div class="node__head"><span class="pos">時代</span><span class="no">No.1</span><a class="back" href="#overview">全体図へ戻る</a></div>
+        <div class="node__head"><span class="pos">時代</span><span class="no">No.1</span><a class="back" href="#scene-1">本編「つかみ」へ戻る</a></div>
         <h3 id="n1"><span class="nb">これからの時代、</span><span class="nb">コミュ力は</span><span class="nb">ほぼ全てになる</span></h3>
         <div class="node__body">
           <ol class="chain">
@@ -544,9 +485,9 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         </footer>
       </article>
 
-      <!-- No.2 過去 -->
+      <!-- No.2 過去（本編の場面2「あえて挑む」の裏） -->
       <article class="node" id="talk-2" aria-labelledby="n2">
-        <div class="node__head"><span class="pos">過去</span><span class="no">No.2</span><a class="back" href="#overview">全体図へ戻る</a></div>
+        <div class="node__head"><span class="pos">過去</span><span class="no">No.2</span><a class="back" href="#scene-2">本編「あえて挑む」へ戻る</a></div>
         <h3 id="n2"><span class="nb">苦手に、</span><span class="nb">ずっと挑んできた</span></h3>
         <div class="node__body">
           <ul class="trials">
@@ -585,9 +526,9 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         </footer>
       </article>
 
-      <!-- No.3 技 -->
+      <!-- No.3 技（本編の場面5「自分だけの戦い方」の裏） -->
       <article class="node" id="talk-3" aria-labelledby="n3">
-        <div class="node__head"><span class="pos">技</span><span class="no">No.3</span><a class="back" href="#overview">全体図へ戻る</a></div>
+        <div class="node__head"><span class="pos">技</span><span class="no">No.3</span><a class="back" href="#scene-5">本編「自分だけの戦い方」へ戻る</a></div>
         <h3 id="n3"><span class="nb">もう一つの必殺技、</span><span class="nb">腹を割って話す</span></h3>
         <div class="node__body">
           <div class="pair">
@@ -616,9 +557,9 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         </footer>
       </article>
 
-      <!-- No.4 本音（全体図の真ん中） -->
+      <!-- No.4 本音（本編の場面6「本当の強さ」の裏） -->
       <article class="node node--core" id="talk-4" aria-labelledby="n4">
-        <div class="node__head"><span class="pos">真ん中・本音</span><span class="no">No.4</span><a class="back" href="#overview">全体図へ戻る</a></div>
+        <div class="node__head"><span class="pos">本音</span><span class="no">No.4</span><a class="back" href="#scene-6">本編「本当の強さ」へ戻る</a></div>
         <h3 id="n4">本当は、<span class="nb">話を聞いてほしかった。</span><span class="nb">人を導きたかった。</span></h3>
         <div class="node__body">
           <p class="muted">全部の挑戦の裏にあった本音です。</p>
@@ -636,7 +577,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
           <div class="core__text">
             <p>子どもの頃から感じていた違和感の正体がわかった。本当は、自分の話を聞いてほしいし、人を導くリーダーになりたい。</p>
             <p class="muted">アナリティカルの自分には、その素養がないと諦めていた。</p>
-            <p class="core__key"><span class="nb">足りなかったのは、</span><span class="nb">伝えるスキルだけ。</span><span class="nb">鍛え続ければ、</span><span class="nb">人を導けるようになる。</span></p>
+            <p class="core__next">このあと本編の<q>実は、自己主張が強いタイプだった</q>につながります。</p>
           </div>
         </div>
         <footer class="why">
@@ -648,16 +589,16 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         </footer>
       </article>
 
-      <!-- No.5 これから -->
+      <!-- No.5 これから（本編の場面7「結論と締め」の裏） -->
       <article class="node" id="talk-5" aria-labelledby="n5">
-        <div class="node__head"><span class="pos">これから</span><span class="no">No.5</span><a class="back" href="#overview">全体図へ戻る</a></div>
-        <h3 id="n5"><span class="nb">青いままでいる、</span><span class="nb">の背景</span></h3>
+        <div class="node__head"><span class="pos">これから</span><span class="no">No.5</span><a class="back" href="#scene-7">本編「結論と締め」へ戻る</a></div>
+        <h3 id="n5"><span class="nb">いつまでも青くいる、</span><span class="nb">の背景</span></h3>
         <div class="node__body">
           <div class="future">
             <div class="future__told">
               <span class="muted">本編で話した約束</span>
-              <b>青いままでいる</b>
-              <span>いつまでも初心で、挑戦者でいたい。</span>
+              <b>いつまでも青くいる</b>
+              <span>10代の頃のように、初心のままチャレンジし続ける。</span>
             </div>
             <div class="future__lines">
               <p>来年、40歳。人生の折り返し地点に差しかかる。</p>
@@ -691,14 +632,14 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
         <ul>
           <li><b>聞く人はもう気付いている</b><span>No.1 コミュ力はほぼ全てになる</span></li>
           <li><b>聞く人にとって本質ではない</b><span>No.4 本当は、人を導きたかった</span></li>
-          <li><b>聞く人への配慮</b><span>No.5 青いままでいる、の背景</span></li>
+          <li><b>聞く人への配慮</b><span>No.5 いつまでも青くいる、の背景</span></li>
         </ul>
       </div>
       <div class="group">
         <h3><i class="swatch" aria-hidden="true"></i>5分の組み立ての都合で</h3>
         <ul>
           <li><b>本題から逸れる</b><span>No.2 苦手に、ずっと挑んできた</span></li>
-          <li><b>尺の都合</b><span>No.3 腹を割って話す／No.5 青いままでいる、の背景</span></li>
+          <li><b>尺の都合</b><span>No.3 腹を割って話す／No.5 いつまでも青くいる、の背景</span></li>
         </ul>
       </div>
     </div>
@@ -706,7 +647,7 @@ sup.note { color: var(--gold); font-size: 0.7em; margin-left: 1px; }
 
   <footer class="foot">
     <p>※ 高齢者（65歳以上）の割合が2050年に39.6%になるという、総務省の資料の推計による。<a href="https://www.soumu.go.jp/main_content/000273900.pdf">総務省の資料（PDF）</a></p>
-    <p>ADS卒業パーティー in TOKYO（2026年10月31日）0次会 LT会での発表をもとに、発表のあとでまとめました。</p>
+    <p>ADS卒業パーティー in TOKYO（2026年10月31日）0次会 LT会での発表をもとに、発表のあとでまとめました。本編の要約は、発表の原稿をもとに短くしたものです。</p>
   </footer>
 </main>
 </body>
